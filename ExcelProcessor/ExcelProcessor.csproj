@@ -6,9 +6,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Dapper" Version="1.50.5" />
     <PackageReference Include="EPPlus.Core" Version="1.5.4">
       <IncludeAssets></IncludeAssets>
     </PackageReference>
+    <PackageReference Include="MySql.Data" Version="8.0.13" />
   </ItemGroup>
 
 </Project>
