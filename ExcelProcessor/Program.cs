@@ -7,8 +7,7 @@ namespace ExcelProcessor
     {
         static void Main(string[] args)
         {
-
-            Console.WriteLine("Service has started...");            
+            Console.WriteLine("Service has started...");
             Watcher.WatchFile();
             Console.ReadKey();
         }

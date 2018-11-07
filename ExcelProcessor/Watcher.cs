@@ -8,15 +8,10 @@ namespace ExcelProcessor
 {
     public class Watcher
     {
-        public static string Container { get; set; }
-
         public static void WatchFile()
         {
-            var folder = FileManager.GetContainerFolder();
-
-            FileSystemWatcher watcher = new FileSystemWatcher();
-            Container = folder;
-            watcher.Path = folder;
+            FileSystemWatcher watcher = new FileSystemWatcher();     
+            watcher.Path = FileManager.GetContainerFolder().Name;
             watcher.Filter = "*.xlsx";
             watcher.IncludeSubdirectories = true;
             watcher.EnableRaisingEvents = true;
@@ -30,13 +25,13 @@ namespace ExcelProcessor
 
         private static void OnCreated(object sender, FileSystemEventArgs e)
         {
-            Console.WriteLine("File created");
+            Console.WriteLine($"File [{e.Name}] has been created.");
             Parser.Run();
         }
 
         private static void OnDeleted(object sender, FileSystemEventArgs e)
         {
-            Console.WriteLine("File deleted");
+            Console.WriteLine($"File [{e.Name}] has been deleted.");
         }
 
 
