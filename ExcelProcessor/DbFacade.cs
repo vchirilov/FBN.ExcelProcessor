@@ -20,9 +20,9 @@ namespace ExcelProcessor
                 columns += $",{prop.Name}";
             columns = columns.TrimStart(',');
 
-            var modelAttribute = (ModelAttribute)typeof(T).GetCustomAttribute(typeof(ModelAttribute));
+            var modelAttr = (ModelAttribute)typeof(T).GetCustomAttribute(typeof(ModelAttribute));
 
-            StringBuilder text = new StringBuilder($"INSERT INTO {modelAttribute.Table} ({columns}) VALUES ");
+            StringBuilder text = new StringBuilder($"INSERT INTO {modelAttr.Table} ({columns}) VALUES ");
 
             using (var conn = new MySqlConnection("server=localhost;port=3306;database=fbn_staging;user=root;password=spartak_1"))
             {
@@ -36,7 +36,6 @@ namespace ExcelProcessor
                         var parameters = string.Empty;
 
                         foreach (var pair in pairs)
-                            //parameters += $",'{pair.Value}'";
                             parameters += $",'{MySqlHelper.EscapeString(pair.Value.ToString())}'";
 
                         rows.Add("(" + parameters.TrimStart(',') + ")");
