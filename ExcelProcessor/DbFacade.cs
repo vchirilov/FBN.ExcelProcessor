@@ -36,7 +36,8 @@ namespace ExcelProcessor
                         var parameters = string.Empty;
 
                         foreach (var pair in pairs)
-                            parameters += $",'{pair.Value}'";
+                            //parameters += $",'{pair.Value}'";
+                            parameters += $",'{MySqlHelper.EscapeString(pair.Value.ToString())}'";
 
                         rows.Add("(" + parameters.TrimStart(',') + ")");
                     }
@@ -49,7 +50,16 @@ namespace ExcelProcessor
                 using (MySqlCommand sqlCommand = new MySqlCommand(text.ToString(), conn))
                 {
                     sqlCommand.CommandType = CommandType.Text;
-                    sqlCommand.ExecuteNonQuery();
+
+                    try
+                    {
+                        sqlCommand.ExecuteNonQuery();
+                    }
+                    catch (Exception exc)
+                    {
+                        Console.WriteLine($"Insert has failed: {exc.Message}");
+                    }
+                    
                 }
             }
         }

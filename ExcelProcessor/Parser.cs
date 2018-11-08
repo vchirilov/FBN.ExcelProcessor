@@ -1,67 +1,97 @@
-﻿using OfficeOpenXml;
+﻿using ExcelProcessor.Helpers;
+using ExcelProcessor.Models;
+using OfficeOpenXml;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using System.Threading;
 
 namespace ExcelProcessor
 {
     public class Parser
     {
-        public static void Run()
+        public static void Run<T>() where T : IModel, new()
         {
-            var ds = new System.Data.DataSet();
             var attempts = 0;
-
             var folder = FileManager.GetContainerFolder().Name;
 
             Console.WriteLine($"Selected file [{FileManager.File}]");
 
             var filePath = Path.Combine(folder, FileManager.File);   
             
-            FileInfo file = new FileInfo(filePath);            
+            FileInfo file = new FileInfo(filePath);
 
-            while(true)
+            var sheet = typeof(T).Name;
+            var data = new List<T>();
+
+            while (true)
             {                
                 try
                 {
                     using (ExcelPackage package = new ExcelPackage(file))
                     {
-                        using (ExcelWorksheet worksheet = package.Workbook.Worksheets["CPGPL"])
+                        using (ExcelWorksheet worksheet = package.Workbook.Worksheets[sheet])
                         {
                             int rowCount = worksheet.Dimension.Rows;
-                            int ColCount = worksheet.Dimension.Columns;
+                            int colCount = worksheet.Dimension.Columns;                            
 
-                            var rawText = string.Empty;
-
-                            #region CodeForLaterUse
-                            //for (int row = 1; row <= rowCount; row++)
+                            #region Validate Headers (Not possible as there are mismateches between database columns and Excel headers)
+                            ////Validate headers
+                            //var index = 1;
+                            //foreach (var prop in typeof(T).GetProperties())
                             //{
-                            //    for (int col = 1; col <= ColCount; col++)
-                            //    {
-                            //        // This is just for demo purposes
-                            //        rawText += worksheet.Cells[row, col].Value.ToString() + "\t";
-                            //    }
-                            //    rawText += "\r\n";
+                            //    if (!worksheet.Cells[1, index].Value.ToString().Compare(prop.Name))
+                            //        throw new ArgumentException($"Header[1,{index}] is not {prop.Name}");
+                            //    index++;
                             //} 
                             #endregion
 
-                            for (int row = 1; row <= rowCount; row++)
+                            //Fetch data from spreadsheet file
+                            for (int row = 2; row <= rowCount; row++)
                             {
-                                if (worksheet.Cells[row, 12]?.Value != null)
-                                    Console.WriteLine(worksheet.Cells[row, 12]?.Value?.ToString());
+                                dynamic obj = new T();
+                                var col = 1;
+
+                                foreach (var prop in typeof(T).GetProperties())
+                                {
+                                    object value = worksheet.Cells[row, col].Value;
+
+                                    switch (prop.PropertyType.Name)
+                                    {
+                                        case "Int32":
+                                            value = Convert.ToInt32(value);
+                                            break;
+                                        case "Decimal":
+                                            value = Convert.ToDecimal(value);
+                                            break;
+                                        default:
+                                            break;
+                                    }
+
+                                    typeof(T).GetProperty($"{prop.Name}").SetValue(obj, value);
+                                    col++;
+                                }
+
+                                if (!obj.IsEmpty())
+                                    data.Add(obj);
+
                             }
                         }
                     }
 
                     break;
                 }
-                catch (IOException exc)
+                catch (IOException)
                 {
                     Thread.Sleep(500);
                     Console.WriteLine("File copy in process...");                    
                     if (++attempts >= 20) break;
                 }                
-            }            
+            }
+
+            DbFacade db = new DbFacade();
+            db.Insert(data);
 
             if (FileManager.IsFileLocked(file))
                 Console.WriteLine("The file is locked");

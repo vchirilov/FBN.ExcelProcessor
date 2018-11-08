@@ -10,21 +10,18 @@ namespace ExcelProcessor
         static void Main(string[] args)
         {
             Console.WriteLine("Service has started...");
-            //Watcher.WatchFile();           
+            Watcher.WatchFile();           
 
-            DbFacade db = new DbFacade();
+            //DbFacade db = new DbFacade();
+            //List<Cpgpl> test = new List<Cpgpl>();
 
-            List<Cpgpl> test = new List<Cpgpl>();
+            //for(int i=0; i < 885; i++)
+            //{
+            //    test.Add(new Cpgpl { Year = i, YearType = "FY" + i, Retailer = "Test" + 1 });
+            //}                       
 
-            for(int i=0; i < 885; i++)
-            {
-                test.Add(new Cpgpl { Year = i, YearType = "FY" + i, Retailer = "Test" + 1 });
-            }            
-            
+            //db.Insert<Cpgpl>(test);
 
-            db.Insert<Cpgpl>(test);
-
-            Console.WriteLine("Done");
             Console.ReadKey();
         }
     }
