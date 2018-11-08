@@ -22,17 +22,17 @@ namespace ExcelProcessor
 
             var modelAttr = (ModelAttribute)typeof(T).GetCustomAttribute(typeof(ModelAttribute));
 
-            StringBuilder text = new StringBuilder($"INSERT INTO {modelAttr.Table} ({columns}) VALUES ");
-
             using (var conn = new MySqlConnection("server=localhost;port=3306;database=fbn_staging;user=root;password=spartak_1"))
-            {
-                List<string> rows = new List<string>();
+            {                
+                conn.Open();
 
-                foreach(var chunk in chunks)
+                foreach (var chunk in chunks)
                 {
+                    List<string> rows = new List<string>();
+
                     foreach (var item in chunk)
                     {
-                        var pairs = DictionaryFromType(item);                        
+                        var pairs = DictionaryFromType(item);
                         var parameters = string.Empty;
 
                         foreach (var pair in pairs)
@@ -40,25 +40,23 @@ namespace ExcelProcessor
 
                         rows.Add("(" + parameters.TrimStart(',') + ")");
                     }
-                }
-                
-                text.Append(string.Join(",", rows));
-                text.Append(";");
 
-                conn.Open();
-                using (MySqlCommand sqlCommand = new MySqlCommand(text.ToString(), conn))
-                {
-                    sqlCommand.CommandType = CommandType.Text;
+                    var text = new StringBuilder($"INSERT INTO {modelAttr.Table} ({columns}) VALUES ");
+                    text.Append(string.Join(",", rows));
+                    text.Append(";");
 
-                    try
+                    using (MySqlCommand sqlCommand = new MySqlCommand(text.ToString(), conn))
                     {
-                        sqlCommand.ExecuteNonQuery();
+                        try
+                        {
+                            sqlCommand.CommandType = CommandType.Text;
+                            sqlCommand.ExecuteNonQuery();
+                        }
+                        catch (Exception exc)
+                        {
+                            Console.WriteLine($"Insert has failed: {exc.Message}");
+                        }
                     }
-                    catch (Exception exc)
-                    {
-                        Console.WriteLine($"Insert has failed: {exc.Message}");
-                    }
-                    
                 }
             }
         }
