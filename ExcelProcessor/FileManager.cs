@@ -8,16 +8,33 @@ namespace ExcelProcessor
 {
     public class FileManager
     {
-        public static DirectoryInfo GetContainerFolder() => Directory.CreateDirectory(Path.Combine(Environment.CurrentDirectory, "Container"));
-        public static string File => GetContainerFolder().GetFiles().OrderByDescending(f => f.LastWriteTime).FirstOrDefault()?.Name;
-
-        public static bool IsFileLocked(FileInfo file)
+        public static DirectoryInfo GetContainerFolder() => Directory.CreateDirectory(Path.Combine(Environment.CurrentDirectory, "Container"));        
+        public static FileInfo File
         {
-            FileStream stream = null;          
+            get
+            {
+                var folder = GetContainerFolder().Name;
+                var filePath = Path.Combine(folder, FileName);
+                return new FileInfo(filePath);
+            }
+            
+        }
+        public static void DeleteFile()
+        {
+            if (FileManager.IsFileLocked(File))
+                Console.WriteLine("The file is locked");
+            else
+                File.Delete();
+        }
+
+        private static string FileName => GetContainerFolder().GetFiles().OrderByDescending(f => f.LastWriteTime).FirstOrDefault()?.Name;
+        private static bool IsFileLocked(FileInfo file)
+        {
+            FileStream stream = null;
 
             try
             {
-                stream = file.Open(FileMode.Open,FileAccess.Read,FileShare.None);
+                stream = file.Open(FileMode.Open, FileAccess.Read, FileShare.None);
             }
             catch (IOException)
             {
@@ -31,6 +48,6 @@ namespace ExcelProcessor
 
             //file is not locked
             return false;
-        }        
+        }
     }    
 }

@@ -14,7 +14,7 @@ namespace ExcelProcessor
             FileSystemWatcher watcher = new FileSystemWatcher();     
             watcher.Path = FileManager.GetContainerFolder().Name;
             watcher.Filter = "*.xlsx";
-            watcher.IncludeSubdirectories = true;
+            watcher.IncludeSubdirectories = false;
             watcher.EnableRaisingEvents = true;
 
             watcher.Created += OnCreated;
@@ -27,8 +27,11 @@ namespace ExcelProcessor
         private static void OnCreated(object sender, FileSystemEventArgs e)
         {
             Console.WriteLine($"File [{e.Name}] has been created.");
-            //Parser.Run<Cpgpl>();
+
+            Parser.Run<Cpgpl>();
             Parser.Run<ProductAttributes>();
+
+            FileManager.DeleteFile();
         }
 
         private static void OnDeleted(object sender, FileSystemEventArgs e)

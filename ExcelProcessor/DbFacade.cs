@@ -13,7 +13,7 @@ namespace ExcelProcessor
     {
         public void Insert<T>(List<T> items)
         {
-            Console.WriteLine($"Sheet {typeof(T).Name} is being processed...");
+            Console.WriteLine($"Sheet {typeof(T).Name} in progress...");
 
             var chunks = GetChunks(items, 100);
 
@@ -40,7 +40,11 @@ namespace ExcelProcessor
                         var parameters = string.Empty;
 
                         foreach (var pair in pairs)
-                            parameters += $",'{MySqlHelper.EscapeString(pair.Value.ToString())}'";
+                        {
+                            var val = pair.Value == null ? null : MySqlHelper.EscapeString(pair.Value.ToString());
+                            parameters += $",'{val}'";
+                        }
+                            
 
                         rows.Add("(" + parameters.TrimStart(',') + ")");
                     }
@@ -63,6 +67,8 @@ namespace ExcelProcessor
                     }
                 }
             }
+
+            Console.WriteLine($"Sheet {typeof(T).Name} processed.");
         }
 
         private IEnumerable<List<T>> GetChunks<T>(List<T> source, int size = 100)

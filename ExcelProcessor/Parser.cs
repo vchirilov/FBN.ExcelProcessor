@@ -13,23 +13,15 @@ namespace ExcelProcessor
     {
         public static void Run<T>() where T : IModel, new()
         {
-            var attempts = 0;
-            var folder = FileManager.GetContainerFolder().Name;
-
-            Console.WriteLine($"Selected file [{FileManager.File}]");
-
-            var filePath = Path.Combine(folder, FileManager.File);   
-            
-            FileInfo file = new FileInfo(filePath);
-
-            var sheet = typeof(T).Name;
+            var sheet = typeof(T).Name;            
             var data = new List<T>();
+            var attempts = 0;
 
             while (true)
             {                
                 try
                 {
-                    using (ExcelPackage package = new ExcelPackage(file))
+                    using (ExcelPackage package = new ExcelPackage(FileManager.File))
                     {
                         using (ExcelWorksheet worksheet = package.Workbook.Worksheets[sheet])
                         {
@@ -92,11 +84,6 @@ namespace ExcelProcessor
 
             DbFacade db = new DbFacade();
             db.Insert(data);
-
-            if (FileManager.IsFileLocked(file))
-                Console.WriteLine("The file is locked");
-            else
-                file.Delete();
         }
     }
 }
