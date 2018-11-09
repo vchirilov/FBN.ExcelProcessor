@@ -1,4 +1,5 @@
-﻿using ExcelProcessor.Models;
+﻿using ExcelProcessor.Config;
+using ExcelProcessor.Models;
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
@@ -12,6 +13,8 @@ namespace ExcelProcessor
     {
         public void Insert<T>(List<T> items)
         {
+            Console.WriteLine($"Sheet {typeof(T).Name} is being processed...");
+
             var chunks = GetChunks(items, 100);
 
             //Build column list in INSERT statement
@@ -21,8 +24,9 @@ namespace ExcelProcessor
             columns = columns.TrimStart(',');
 
             var modelAttr = (ModelAttribute)typeof(T).GetCustomAttribute(typeof(ModelAttribute));
+            var connectionString = AppSettings.GetInstance().connectionString;
 
-            using (var conn = new MySqlConnection("server=localhost;port=3306;database=fbn_staging;user=root;password=spartak_1"))
+            using (var conn = new MySqlConnection(connectionString))
             {                
                 conn.Open();
 

@@ -27,7 +27,7 @@ namespace ExcelProcessor
         private static void OnCreated(object sender, FileSystemEventArgs e)
         {
             Console.WriteLine($"File [{e.Name}] has been created.");
-            Parser.Run<Cpgpl>();
+            Parser.Run<CPGPL>();
         }
 
         private static void OnDeleted(object sender, FileSystemEventArgs e)

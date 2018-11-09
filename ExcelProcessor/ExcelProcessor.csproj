@@ -11,6 +11,13 @@
       <IncludeAssets></IncludeAssets>
     </PackageReference>
     <PackageReference Include="MySql.Data" Version="8.0.13" />
+    <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="config.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>
