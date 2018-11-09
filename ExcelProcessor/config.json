@@ -1,4 +1,4 @@
 {
   "connectionString": "server=localhost;port=3306;database=fbn_staging;user=root;password=spartak_1",
-  "sheets": [ "CPGPL", "B", "C", "D" ]
+  "sheets": [ "ProductAttributes", "CPGPL" ]
 }

@@ -11,7 +11,7 @@ namespace ExcelProcessor
         static void Main(string[] args)
         {
             Console.WriteLine("Service has started...");
-            Watcher.WatchFile();           
+            Watcher.WatchFile();
             Console.ReadKey();
         }
     }

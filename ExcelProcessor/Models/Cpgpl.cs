@@ -5,7 +5,7 @@ using System.Text;
 namespace ExcelProcessor.Models
 {
     [Model(Table = "cpg_pl")]
-    public class CPGPL: IModel
+    public class Cpgpl: IModel
     {
         public int Year { get; set; }
         public string YearType { get; set; }
