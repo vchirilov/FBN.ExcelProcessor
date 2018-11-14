@@ -30,6 +30,7 @@ namespace ExcelProcessor
             Parser.Run<MarketOverview>();
             Parser.Run<CpgProductHierarchy>();
             Parser.Run<SellOutData>();
+            Parser.Run<RetailerPL>();
             Parser.Run<Cpgpl>();
 
             FileManager.DeleteFile();

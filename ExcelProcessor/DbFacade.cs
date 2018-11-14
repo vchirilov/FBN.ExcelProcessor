@@ -13,7 +13,7 @@ namespace ExcelProcessor
     {
         public void Insert<T>(List<T> items)
         {
-            Console.WriteLine($"Sheet {typeof(T).Name} in progress...");
+            Console.WriteLine($"{typeof(T).Name} data loading into database...");
 
             const int BATCH = 100;
             var chunks = GetChunks(items, BATCH);
@@ -73,7 +73,7 @@ namespace ExcelProcessor
                 }
             }
 
-            Console.WriteLine($"Sheet {typeof(T).Name} processed.");
+            Console.WriteLine($"{typeof(T).Name} loaded.");
         }
 
         private void ExecuteNonQuery(string sqlStatement, string message = "SQL execution has failed")
