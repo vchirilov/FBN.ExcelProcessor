@@ -31,6 +31,7 @@ namespace ExcelProcessor
             Parser.Run<CpgProductHierarchy>();
             Parser.Run<SellOutData>();
             Parser.Run<RetailerPL>();
+            Parser.Run<RetailerProductHierarchy>();
             Parser.Run<Cpgpl>();
 
             FileManager.DeleteFile();
