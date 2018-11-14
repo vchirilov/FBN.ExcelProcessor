@@ -27,6 +27,7 @@ namespace ExcelProcessor
 
             Parser.Run<Cpgpl>();
             Parser.Run<ProductAttributes>();
+            Parser.Run<CpgProductHierarchy>();
 
             FileManager.DeleteFile();
         }

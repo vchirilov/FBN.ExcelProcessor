@@ -27,10 +27,10 @@ namespace ExcelProcessor.Models
             if (Type == null 
                 && EAN == null 
                 && Brand == null 
-                && PackSize == 0 
+                && PackSize == 0m
                 && PackSizeUnit == null 
                 && MultiPack == null 
-                && UnitsPerPack == 0m 
+                && UnitsPerPack == 0
                 && PackageType == null
                 && Form == null
                 && TargetUser == null 
