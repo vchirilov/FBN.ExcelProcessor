@@ -15,7 +15,8 @@ namespace ExcelProcessor
         {
             Console.WriteLine($"Sheet {typeof(T).Name} in progress...");
 
-            var chunks = GetChunks(items, 100);
+            const int BATCH = 100;
+            var chunks = GetChunks(items, BATCH);
 
             //Build column list in INSERT statement
             var columns = string.Empty;
@@ -25,6 +26,8 @@ namespace ExcelProcessor
 
             var modelAttr = (ModelAttribute)typeof(T).GetCustomAttribute(typeof(ModelAttribute));
             var connectionString = AppSettings.GetInstance().connectionString;
+
+            ExecuteNonQuery($"TRUNCATE TABLE {modelAttr.Table};", $"Truncate has failed for table {modelAttr.Table}");
 
             using (var conn = new MySqlConnection(connectionString))
             {                
@@ -71,7 +74,31 @@ namespace ExcelProcessor
             Console.WriteLine($"Sheet {typeof(T).Name} processed.");
         }
 
-        private IEnumerable<List<T>> GetChunks<T>(List<T> source, int size = 100)
+        private void ExecuteNonQuery(string sqlStatement, string message = "SQL execution has failed")
+        {
+            var connectionString = AppSettings.GetInstance().connectionString;
+
+            using (var conn = new MySqlConnection(connectionString))
+            {
+                conn.Open();
+
+                using (MySqlCommand sqlCommand = new MySqlCommand(sqlStatement.ToString(), conn))
+                {
+                    try
+                    {
+                        sqlCommand.CommandType = CommandType.Text;
+                        sqlCommand.ExecuteNonQuery();
+                    }
+                    catch (Exception exc)
+                    {
+                        Console.WriteLine($"{message}: {exc.Message}");
+                    }
+                }
+            }
+
+        }        
+
+        private IEnumerable<List<T>> GetChunks<T>(List<T> source, int size = 10)
         {
             for (int i = 0; i < source.Count; i += size)
             {
