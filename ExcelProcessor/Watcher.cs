@@ -1,4 +1,5 @@
-﻿using ExcelProcessor.Models;
+﻿using ExcelProcessor.Helpers;
+using ExcelProcessor.Models;
 using System;
 using System.IO;
 
@@ -24,11 +25,11 @@ namespace ExcelProcessor
         private static void OnCreated(object sender, FileSystemEventArgs e)
         {
             Console.WriteLine($"File [{e.Name}] has been created.");
-
-            Parser.Run<Cpgpl>();
+                        
             Parser.Run<ProductAttributes>();
             Parser.Run<MarketOverview>();
             Parser.Run<CpgProductHierarchy>();
+            Parser.Run<Cpgpl>();
 
             FileManager.DeleteFile();
         }

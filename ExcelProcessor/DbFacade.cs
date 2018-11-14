@@ -1,5 +1,5 @@
 ﻿using ExcelProcessor.Config;
-using ExcelProcessor.Models;
+using ExcelProcessor.Helpers;
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
@@ -20,9 +20,11 @@ namespace ExcelProcessor
 
             //Build column list in INSERT statement
             var columns = string.Empty;
-            foreach (var prop in typeof(T).GetProperties())
+            
+            foreach (var prop in AttributeHelper.GetSortedProperties<T>())
                 columns += $",{prop.Name}";
             columns = columns.TrimStart(',');
+
 
             var modelAttr = (ModelAttribute)typeof(T).GetCustomAttribute(typeof(ModelAttribute));
             var connectionString = AppSettings.GetInstance().connectionString;
@@ -111,14 +113,14 @@ namespace ExcelProcessor
             if (customType == null)
                 return new Dictionary<string, object>();
 
-            Type t = customType.GetType();
-            PropertyInfo[] props = t.GetProperties();
+            var props = AttributeHelper.GetSortedProperties(customType);
+
             Dictionary<string, object> dict = new Dictionary<string, object>();
 
-            foreach (PropertyInfo prp in props)
+            foreach (PropertyInfo prop in props)
             {
-                object value = prp.GetValue(customType, new object[] { });
-                dict.Add(prp.Name, value);
+                object value = prop.GetValue(customType, new object[] { });
+                dict.Add(prop.Name, value);
             }
             return dict;
         }

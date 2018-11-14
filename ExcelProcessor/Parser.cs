@@ -1,4 +1,5 @@
-﻿using ExcelProcessor.Models;
+﻿using ExcelProcessor.Helpers;
+using ExcelProcessor.Models;
 using OfficeOpenXml;
 using System;
 using System.Collections.Generic;
@@ -21,21 +22,13 @@ namespace ExcelProcessor
                 {
                     using (ExcelPackage package = new ExcelPackage(FileManager.File))
                     {
+                        Console.WriteLine();
+                        Console.WriteLine($"{sheet} is being initialized...");
+
                         using (ExcelWorksheet worksheet = package.Workbook.Worksheets[sheet])
                         {
                             int rowCount = worksheet.Dimension.Rows;
                             int colCount = worksheet.Dimension.Columns;                            
-
-                            #region Validate Headers (Not possible as there are mismateches between database columns and Excel headers)
-                            ////Validate headers
-                            //var index = 1;
-                            //foreach (var prop in typeof(T).GetProperties())
-                            //{
-                            //    if (!worksheet.Cells[1, index].Value.ToString().Compare(prop.Name))
-                            //        throw new ArgumentException($"Header[1,{index}] is not {prop.Name}");
-                            //    index++;
-                            //} 
-                            #endregion
 
                             //Fetch data from spreadsheet file
                             for (int row = 2; row <= rowCount; row++)
@@ -43,7 +36,7 @@ namespace ExcelProcessor
                                 dynamic obj = new T();
                                 var col = 1;
 
-                                foreach (var prop in typeof(T).GetProperties())
+                                foreach (var prop in AttributeHelper.GetSortedProperties<T>())
                                 {
                                     object value = worksheet.Cells[row, col].Value;
 
@@ -81,7 +74,7 @@ namespace ExcelProcessor
             }
 
             DbFacade db = new DbFacade();
-            db.Insert(data);
+            db.Insert(data);            
         }
     }
 }
