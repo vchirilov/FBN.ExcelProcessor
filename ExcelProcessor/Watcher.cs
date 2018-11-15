@@ -26,19 +26,28 @@ namespace ExcelProcessor
         {
             Console.WriteLine($"File [{e.Name}] has been created.");
                         
-            Parser.Run<ProductAttributes>();
-            Parser.Run<MarketOverview>();
-            Parser.Run<CpgProductHierarchy>();
-            Parser.Run<SellOutData>();
-            Parser.Run<RetailerPL>();
-            Parser.Run<RetailerProductHierarchy>();
-            Parser.Run<Cpgpl>();
+            try
+            {
+                Parser.Run<ProductAttributes>();
+                Parser.Run<MarketOverview>();
+                Parser.Run<CpgProductHierarchy>();
+                Parser.Run<SellOutData>();
+                Parser.Run<RetailerPL>();
+                Parser.Run<RetailerProductHierarchy>();
+                Parser.Run<Cpgpl>();
+            }
+            catch (Exception exc)
+            {
+                Console.WriteLine($"Exception has occured with message {exc.Message}");
+            }
+            
 
             FileManager.DeleteFile();
         }
 
         private static void OnDeleted(object sender, FileSystemEventArgs e)
         {
+            Console.WriteLine();
             Console.WriteLine($"File [{e.Name}] has been deleted.");
         }
 

@@ -58,7 +58,6 @@ namespace ExcelProcessor
 
                                 if (!obj.IsEmpty())
                                     data.Add(obj);
-
                             }
                         }
                     }
