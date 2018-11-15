@@ -6,7 +6,8 @@ namespace ExcelProcessor
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Service has started...");
+            WriteHeadLine();
+
             try
             {
                 Watcher.WatchFile();
@@ -17,6 +18,17 @@ namespace ExcelProcessor
             }
             
             Console.ReadKey();
+        }
+
+        private static void WriteHeadLine()
+        {
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine("Service has started...");
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine("WARNING: Press any key to close the service.");
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.WriteLine("*********************************************");
+            Console.WriteLine();
         }
     }
 }
