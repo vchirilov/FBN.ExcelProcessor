@@ -28,13 +28,13 @@ namespace ExcelProcessor
                         
             try
             {
-                Parser.Run<ProductAttributes>();
-                Parser.Run<MarketOverview>();
+                //Parser.Run<ProductAttributes>();
+                //Parser.Run<MarketOverview>();
                 Parser.Run<CpgProductHierarchy>();
-                Parser.Run<SellOutData>();
-                Parser.Run<RetailerPL>();
-                Parser.Run<RetailerProductHierarchy>();
-                Parser.Run<Cpgpl>();
+                //Parser.Run<SellOutData>();
+                //Parser.Run<RetailerPL>();
+                //Parser.Run<RetailerProductHierarchy>();
+                //Parser.Run<Cpgpl>();
             }
             catch (Exception exc)
             {
