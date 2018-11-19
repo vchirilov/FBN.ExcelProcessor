@@ -4,12 +4,13 @@ using System.Text;
 
 namespace ExcelProcessor.Models
 {
+    [Model(Table = "cpg_hierarchy")]
     public class TreeNode
     {
-        public int Id { get; set; }
-        public int? ParentId { get; set; }
-        public string Name { get; set; }
-        public int Left { get; set; }
-        public int Right { get; set; }
+        [Order(1)] public int Id { get; set; }
+        [Order(2)] public int ParentId { get; set; }
+        [Order(3)] public string Name { get; set; }
+        [Order(4)] public int Lft { get; set; }
+        [Order(5)] public int Rgt { get; set; }
     }
 }

@@ -73,7 +73,13 @@ namespace ExcelProcessor
             }
 
             DbFacade db = new DbFacade();
-            db.Insert(data);            
+            db.Insert(data);
+
+            if (new T() is CpgProductHierarchy)
+            {
+                var cpgHierarchy = CpgProductHierarchyTree.GetTreeNodes(data as List<CpgProductHierarchy>);
+                db.Insert(cpgHierarchy);
+            }
         }
     }
 }
