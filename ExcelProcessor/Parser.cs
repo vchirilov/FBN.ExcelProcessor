@@ -4,6 +4,7 @@ using OfficeOpenXml;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 
 namespace ExcelProcessor
@@ -24,6 +25,13 @@ namespace ExcelProcessor
                     {
                         Console.WriteLine();
                         Console.WriteLine($"{sheet} is being initialized...");
+
+                        //If sheet doesn't exist, exit the method
+                        if (package.Workbook.Worksheets.Where(x => x.Name.Equals(sheet, StringComparison.CurrentCultureIgnoreCase)).FirstOrDefault() == null)
+                        {
+                            Console.WriteLine($"Worksheet {sheet} is missing in input file.");
+                            return;
+                        }                        
 
                         using (ExcelWorksheet worksheet = package.Workbook.Worksheets[sheet])
                         {

@@ -35,6 +35,7 @@ namespace ExcelProcessor
                 Parser.Run<RetailerPL>();
                 Parser.Run<RetailerProductHierarchy>();
                 Parser.Run<Cpgpl>();
+                Parser.Run<RetailerPLSellOutVolume>();
             }
             catch (Exception exc)
             {
