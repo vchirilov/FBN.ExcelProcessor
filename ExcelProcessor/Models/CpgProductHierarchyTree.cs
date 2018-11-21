@@ -49,7 +49,12 @@ namespace ExcelProcessor.Models
 
             foreach (var categoryGroup in categoryGroups)
             {
-                treeNodes.Where(x => x.CategoryGroup.Name.Equals(categoryGroup)).ToList().ForEach(x => x.CategoryGroup.Id = hid);
+                treeNodes.Where(x => x.CategoryGroup.Name.Equals(categoryGroup))
+                    .ToList()
+                    .ForEach(x => {
+                        x.CategoryGroup.ParentId = -1;
+                        x.CategoryGroup.Id = hid;                        
+                    });
                 hid++;
             }
 
@@ -217,18 +222,41 @@ namespace ExcelProcessor.Models
 
             foreach(var value in values)
             {
-                result.Add(value.CategoryGroup);
-                result.Add(value.Subdivision);
-                result.Add(value.Category);
-                result.Add(value.Market);
-                result.Add(value.Sector);
-                result.Add(value.SubSector);
-                result.Add(value.Segment);
-                result.Add(value.ProductForm);
-                result.Add(value.CPG);
-                result.Add(value.BrandForm);
-                result.Add(value.SizePackForm);
-                result.Add(value.SizePackFormVariant);
+                if (!result.Exists(x=> x.Id.Equals(value.CategoryGroup.Id) && x.ParentId.Equals(value.CategoryGroup.ParentId) && x.Name.Equals(value.CategoryGroup.Name,StringComparison.OrdinalIgnoreCase)))
+                    result.Add(value.CategoryGroup);
+
+                if (!result.Exists(x => x.Id.Equals(value.Subdivision.Id) && x.ParentId.Equals(value.Subdivision.ParentId) && x.Name.Equals(value.Subdivision.Name)))
+                    result.Add(value.Subdivision);
+
+                if (!result.Exists(x => x.Id.Equals(value.Category.Id) && x.ParentId.Equals(value.Category.ParentId) && x.Name.Equals(value.Category.Name)))
+                    result.Add(value.Category);
+
+                if (!result.Exists(x => x.Id.Equals(value.Market.Id) && x.ParentId.Equals(value.Market.ParentId) && x.Name.Equals(value.Market.Name)))
+                    result.Add(value.Market);
+
+                if (!result.Exists(x => x.Id.Equals(value.Sector.Id) && x.ParentId.Equals(value.Sector.ParentId) && x.Name.Equals(value.Sector.Name)))
+                    result.Add(value.Sector);
+
+                if (!result.Exists(x => x.Id.Equals(value.SubSector.Id) && x.ParentId.Equals(value.SubSector.ParentId) && x.Name.Equals(value.SubSector.Name)))
+                    result.Add(value.SubSector);
+
+                if (!result.Exists(x => x.Id.Equals(value.Segment.Id) && x.ParentId.Equals(value.Segment.ParentId) && x.Name.Equals(value.Segment.Name)))
+                    result.Add(value.Segment);
+
+                if (!result.Exists(x => x.Id.Equals(value.ProductForm.Id) && x.ParentId.Equals(value.ProductForm.ParentId) && x.Name.Equals(value.ProductForm.Name)))
+                    result.Add(value.ProductForm);
+
+                if (!result.Exists(x => x.Id.Equals(value.CPG.Id) && x.ParentId.Equals(value.CPG.ParentId) && x.Name.Equals(value.CPG.Name)))
+                    result.Add(value.CPG);
+
+                if (!result.Exists(x => x.Id.Equals(value.BrandForm.Id) && x.ParentId.Equals(value.BrandForm.ParentId) && x.Name.Equals(value.BrandForm.Name)))
+                    result.Add(value.BrandForm);
+
+                if (!result.Exists(x => x.Id.Equals(value.SizePackForm.Id) && x.ParentId.Equals(value.SizePackForm.ParentId) && x.Name.Equals(value.SizePackForm.Name)))
+                    result.Add(value.SizePackForm);
+
+                if (!result.Exists(x => x.Id.Equals(value.SizePackFormVariant.Id) && x.ParentId.Equals(value.SizePackFormVariant.ParentId) && x.Name.Equals(value.SizePackFormVariant.Name)))
+                    result.Add(value.SizePackFormVariant);
             }
 
             //return result.OrderBy(x=>x.Id).ThenBy(x=>x.ParentId).ToList();
