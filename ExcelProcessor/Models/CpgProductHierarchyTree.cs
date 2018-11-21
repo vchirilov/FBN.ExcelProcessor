@@ -38,18 +38,19 @@ namespace ExcelProcessor.Models
 
         public static List<CpgProductHierarchyTree> GetHierarchy(List<CpgProductHierarchy> items)
         {
-            int hid = 1;
+            int hid = 1;            
             var treeNodes = new List<CpgProductHierarchyTree>();
+            StringComparison ignoreCase = StringComparison.CurrentCultureIgnoreCase;
 
             foreach (var item in items)
                 treeNodes.Add(new CpgProductHierarchyTree(item));
 
             //Set Id,ParentId values for level 1 (CategoryGroup)
-            var categoryGroups = treeNodes.Select(x => x.CategoryGroup.Name).Distinct();
+            var categoryGroups = treeNodes.Select(x => x.CategoryGroup.Name).Distinct(StringComparer.CurrentCultureIgnoreCase);
 
             foreach (var categoryGroup in categoryGroups)
             {
-                treeNodes.Where(x => x.CategoryGroup.Name.Equals(categoryGroup))
+                treeNodes.Where(x => x.CategoryGroup.Name.Equals(categoryGroup, ignoreCase))
                     .ToList()
                     .ForEach(x => {
                         x.CategoryGroup.ParentId = -1;
@@ -59,11 +60,11 @@ namespace ExcelProcessor.Models
             }
 
             //Set Id,ParentId values for level 2 (SubDivision) 
-            var subDivisions = treeNodes.Select(x => x.Subdivision.Name).Distinct();
+            var subDivisions = treeNodes.Select(x => x.Subdivision.Name).Distinct(StringComparer.CurrentCultureIgnoreCase);
 
             foreach (var subDivision in subDivisions)
             {
-                treeNodes.Where(x => x.Subdivision.Name.Equals(subDivision))
+                treeNodes.Where(x => x.Subdivision.Name.Equals(subDivision, ignoreCase))
                     .ToList()
                     .ForEach(x => {
                         x.Subdivision.ParentId = x.CategoryGroup.Id;
@@ -73,11 +74,11 @@ namespace ExcelProcessor.Models
             }
 
             //Set Id,ParentId values for level 2 (Category) 
-            var categories = treeNodes.Select(x => x.Category.Name).Distinct();
+            var categories = treeNodes.Select(x => x.Category.Name).Distinct(StringComparer.CurrentCultureIgnoreCase);
 
             foreach (var category in categories)
             {
-                treeNodes.Where(x => x.Category.Name.Equals(category))
+                treeNodes.Where(x => x.Category.Name.Equals(category, ignoreCase))
                     .ToList()
                     .ForEach(x => {
                         x.Category.ParentId = x.Subdivision.Id;
@@ -87,11 +88,11 @@ namespace ExcelProcessor.Models
             }
 
             //Set Id,ParentId values for level 3 (Market) 
-            var markets = treeNodes.Select(x => x.Market.Name).Distinct();
+            var markets = treeNodes.Select(x => x.Market.Name).Distinct(StringComparer.CurrentCultureIgnoreCase);
 
             foreach (var market in markets)
             {
-                treeNodes.Where(x => x.Market.Name.Equals(market))
+                treeNodes.Where(x => x.Market.Name.Equals(market, ignoreCase))
                     .ToList()
                     .ForEach(x => {
                         x.Market.ParentId = x.Category.Id;
@@ -101,11 +102,11 @@ namespace ExcelProcessor.Models
             }
 
             //Set Id,ParentId values for level 4 (Sector) 
-            var sectors = treeNodes.Select(x => x.Sector.Name).Distinct();
+            var sectors = treeNodes.Select(x => x.Sector.Name).Distinct(StringComparer.CurrentCultureIgnoreCase);
 
             foreach (var sector in sectors)
             {
-                treeNodes.Where(x => x.Sector.Name.Equals(sector))
+                treeNodes.Where(x => x.Sector.Name.Equals(sector, ignoreCase))
                     .ToList()
                     .ForEach(x => {
                         x.Sector.ParentId = x.Market.Id;
@@ -115,11 +116,11 @@ namespace ExcelProcessor.Models
             }
 
             //Set Id,ParentId values for level 5 (SubSector) 
-            var subSectors = treeNodes.Select(x => x.SubSector.Name).Distinct();
+            var subSectors = treeNodes.Select(x => x.SubSector.Name).Distinct(StringComparer.CurrentCultureIgnoreCase);
 
             foreach (var subSector in subSectors)
             {
-                treeNodes.Where(x => x.SubSector.Name.Equals(subSector))
+                treeNodes.Where(x => x.SubSector.Name.Equals(subSector, ignoreCase))
                     .ToList()
                     .ForEach(x => {
                         x.SubSector.ParentId = x.Sector.Id;
@@ -129,11 +130,11 @@ namespace ExcelProcessor.Models
             }
 
             //Set Id,ParentId values for level 6 (Segment) 
-            var segments = treeNodes.Select(x => x.Segment.Name).Distinct();
+            var segments = treeNodes.Select(x => x.Segment.Name).Distinct(StringComparer.CurrentCultureIgnoreCase);
 
             foreach (var segment in segments)
             {
-                treeNodes.Where(x => x.Segment.Name.Equals(segment))
+                treeNodes.Where(x => x.Segment.Name.Equals(segment, ignoreCase))
                     .ToList()
                     .ForEach(x => {
                         x.Segment.ParentId = x.SubSector.Id;
@@ -143,11 +144,11 @@ namespace ExcelProcessor.Models
             }
 
             //Set Id,ParentId values for level 7 (ProductForm) 
-            var forms = treeNodes.Select(x => x.ProductForm.Name).Distinct();
+            var forms = treeNodes.Select(x => x.ProductForm.Name).Distinct(StringComparer.CurrentCultureIgnoreCase);
 
             foreach (var form in forms)
             {
-                treeNodes.Where(x => x.ProductForm.Name.Equals(form))
+                treeNodes.Where(x => x.ProductForm.Name.Equals(form, ignoreCase))
                     .ToList()
                     .ForEach(x => {
                         x.ProductForm.ParentId = x.Segment.Id;
@@ -157,11 +158,11 @@ namespace ExcelProcessor.Models
             }
 
             //Set Id,ParentId values for level 8 (CPG) 
-            var cpgs = treeNodes.Select(x => x.CPG.Name).Distinct();
+            var cpgs = treeNodes.Select(x => x.CPG.Name).Distinct(StringComparer.CurrentCultureIgnoreCase);
 
             foreach (var cpg in cpgs)
             {
-                treeNodes.Where(x => x.CPG.Name.Equals(cpg))
+                treeNodes.Where(x => x.CPG.Name.Equals(cpg, ignoreCase))
                     .ToList()
                     .ForEach(x => {
                         x.CPG.ParentId = x.ProductForm.Id;
@@ -171,11 +172,11 @@ namespace ExcelProcessor.Models
             }
 
             //Set Id,ParentId values for level 9 (BrandForm) 
-            var brands = treeNodes.Select(x => x.BrandForm.Name).Distinct();
+            var brands = treeNodes.Select(x => x.BrandForm.Name).Distinct(StringComparer.CurrentCultureIgnoreCase);
 
             foreach (var brand in brands)
             {
-                treeNodes.Where(x => x.BrandForm.Name.Equals(brand))
+                treeNodes.Where(x => x.BrandForm.Name.Equals(brand, ignoreCase))
                     .ToList()
                     .ForEach(x => {
                         x.BrandForm.ParentId = x.CPG.Id;
@@ -185,11 +186,11 @@ namespace ExcelProcessor.Models
             }
 
             //Set Id,ParentId values for level 10 (SizePackForm) 
-            var sizePacks = treeNodes.Select(x => x.SizePackForm.Name).Distinct();
+            var sizePacks = treeNodes.Select(x => x.SizePackForm.Name).Distinct(StringComparer.CurrentCultureIgnoreCase);
 
             foreach (var sizePack in sizePacks)
             {
-                treeNodes.Where(x => x.SizePackForm.Name.Equals(sizePack))
+                treeNodes.Where(x => x.SizePackForm.Name.Equals(sizePack, ignoreCase))
                     .ToList()
                     .ForEach(x => {
                         x.SizePackForm.ParentId = x.BrandForm.Id;
@@ -199,11 +200,11 @@ namespace ExcelProcessor.Models
             }
 
             //Set Id,ParentId values for level 10 (SizePackFormVariant) 
-            var variants = treeNodes.Select(x => x.SizePackFormVariant.Name).Distinct();
+            var variants = treeNodes.Select(x => x.SizePackFormVariant.Name).Distinct(StringComparer.CurrentCultureIgnoreCase);
 
             foreach (var variant in variants)
             {
-                treeNodes.Where(x => x.SizePackFormVariant.Name.Equals(variant))
+                treeNodes.Where(x => x.SizePackFormVariant.Name.Equals(variant, ignoreCase))
                     .ToList()
                     .ForEach(x => {
                         x.SizePackFormVariant.ParentId = x.SizePackForm.Id;
@@ -217,49 +218,49 @@ namespace ExcelProcessor.Models
 
         public static List<TreeNode> GetTreeNodes(List<CpgProductHierarchy> items)
         {
+            StringComparison ignoreCase = StringComparison.CurrentCultureIgnoreCase;
             List<TreeNode> result = new List<TreeNode>();
             List<CpgProductHierarchyTree> values = GetHierarchy(items);
 
             foreach(var value in values)
             {
-                if (!result.Exists(x=> x.Id.Equals(value.CategoryGroup.Id) && x.ParentId.Equals(value.CategoryGroup.ParentId) && x.Name.Equals(value.CategoryGroup.Name,StringComparison.OrdinalIgnoreCase)))
+                if (!result.Exists(x=> x.Id.Equals(value.CategoryGroup.Id) && x.ParentId.Equals(value.CategoryGroup.ParentId) && x.Name.Equals(value.CategoryGroup.Name, ignoreCase)))
                     result.Add(value.CategoryGroup);
 
-                if (!result.Exists(x => x.Id.Equals(value.Subdivision.Id) && x.ParentId.Equals(value.Subdivision.ParentId) && x.Name.Equals(value.Subdivision.Name)))
+                if (!result.Exists(x => x.Id.Equals(value.Subdivision.Id) && x.ParentId.Equals(value.Subdivision.ParentId) && x.Name.Equals(value.Subdivision.Name, ignoreCase)))
                     result.Add(value.Subdivision);
 
-                if (!result.Exists(x => x.Id.Equals(value.Category.Id) && x.ParentId.Equals(value.Category.ParentId) && x.Name.Equals(value.Category.Name)))
+                if (!result.Exists(x => x.Id.Equals(value.Category.Id) && x.ParentId.Equals(value.Category.ParentId) && x.Name.Equals(value.Category.Name, ignoreCase)))
                     result.Add(value.Category);
 
-                if (!result.Exists(x => x.Id.Equals(value.Market.Id) && x.ParentId.Equals(value.Market.ParentId) && x.Name.Equals(value.Market.Name)))
+                if (!result.Exists(x => x.Id.Equals(value.Market.Id) && x.ParentId.Equals(value.Market.ParentId) && x.Name.Equals(value.Market.Name, ignoreCase)))
                     result.Add(value.Market);
 
-                if (!result.Exists(x => x.Id.Equals(value.Sector.Id) && x.ParentId.Equals(value.Sector.ParentId) && x.Name.Equals(value.Sector.Name)))
+                if (!result.Exists(x => x.Id.Equals(value.Sector.Id) && x.ParentId.Equals(value.Sector.ParentId) && x.Name.Equals(value.Sector.Name, ignoreCase)))
                     result.Add(value.Sector);
 
-                if (!result.Exists(x => x.Id.Equals(value.SubSector.Id) && x.ParentId.Equals(value.SubSector.ParentId) && x.Name.Equals(value.SubSector.Name)))
+                if (!result.Exists(x => x.Id.Equals(value.SubSector.Id) && x.ParentId.Equals(value.SubSector.ParentId) && x.Name.Equals(value.SubSector.Name, ignoreCase)))
                     result.Add(value.SubSector);
 
-                if (!result.Exists(x => x.Id.Equals(value.Segment.Id) && x.ParentId.Equals(value.Segment.ParentId) && x.Name.Equals(value.Segment.Name)))
+                if (!result.Exists(x => x.Id.Equals(value.Segment.Id) && x.ParentId.Equals(value.Segment.ParentId) && x.Name.Equals(value.Segment.Name, ignoreCase)))
                     result.Add(value.Segment);
 
-                if (!result.Exists(x => x.Id.Equals(value.ProductForm.Id) && x.ParentId.Equals(value.ProductForm.ParentId) && x.Name.Equals(value.ProductForm.Name)))
+                if (!result.Exists(x => x.Id.Equals(value.ProductForm.Id) && x.ParentId.Equals(value.ProductForm.ParentId) && x.Name.Equals(value.ProductForm.Name, ignoreCase)))
                     result.Add(value.ProductForm);
 
-                if (!result.Exists(x => x.Id.Equals(value.CPG.Id) && x.ParentId.Equals(value.CPG.ParentId) && x.Name.Equals(value.CPG.Name)))
+                if (!result.Exists(x => x.Id.Equals(value.CPG.Id) && x.ParentId.Equals(value.CPG.ParentId) && x.Name.Equals(value.CPG.Name, ignoreCase)))
                     result.Add(value.CPG);
 
-                if (!result.Exists(x => x.Id.Equals(value.BrandForm.Id) && x.ParentId.Equals(value.BrandForm.ParentId) && x.Name.Equals(value.BrandForm.Name)))
+                if (!result.Exists(x => x.Id.Equals(value.BrandForm.Id) && x.ParentId.Equals(value.BrandForm.ParentId) && x.Name.Equals(value.BrandForm.Name, ignoreCase)))
                     result.Add(value.BrandForm);
 
-                if (!result.Exists(x => x.Id.Equals(value.SizePackForm.Id) && x.ParentId.Equals(value.SizePackForm.ParentId) && x.Name.Equals(value.SizePackForm.Name)))
+                if (!result.Exists(x => x.Id.Equals(value.SizePackForm.Id) && x.ParentId.Equals(value.SizePackForm.ParentId) && x.Name.Equals(value.SizePackForm.Name, ignoreCase)))
                     result.Add(value.SizePackForm);
 
-                if (!result.Exists(x => x.Id.Equals(value.SizePackFormVariant.Id) && x.ParentId.Equals(value.SizePackFormVariant.ParentId) && x.Name.Equals(value.SizePackFormVariant.Name)))
+                if (!result.Exists(x => x.Id.Equals(value.SizePackFormVariant.Id) && x.ParentId.Equals(value.SizePackFormVariant.ParentId) && x.Name.Equals(value.SizePackFormVariant.Name, ignoreCase)))
                     result.Add(value.SizePackFormVariant);
             }
 
-            //return result.OrderBy(x=>x.Id).ThenBy(x=>x.ParentId).ToList();
             return result;
         }
     }
