@@ -4,8 +4,8 @@ using System.Text;
 
 namespace ExcelProcessor.Models
 {
-    [Model(Table = "monthly_plan")]
-    public class RetailerPLSellOutVolume: IModel
+    [Model(Table = "cpg_reference_monthly_plan")]
+    public class CPGReferenceMonthlyPlan: IModel
     {
         [Order(1)] public int Year { get; set; }
         [Order(2)] public string YearType { get; set; }
