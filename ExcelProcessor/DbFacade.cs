@@ -30,7 +30,7 @@ namespace ExcelProcessor
             columns = columns.TrimStart(',');
                                     
             var dbTable = GetDbTable<T>();
-            var connectionString = AppSettings.GetInstance().connectionString;
+            var connectionString = Decode(AppSettings.GetInstance().connectionString);
 
             ExecuteNonQuery($"TRUNCATE TABLE {dbTable};", $"Truncate has failed for table {dbTable}");
 
@@ -86,7 +86,7 @@ namespace ExcelProcessor
 
         private void ExecuteNonQuery(string sqlStatement, string message = "SQL execution has failed")
         {
-            var connectionString = AppSettings.GetInstance().connectionString;
+            var connectionString = Decode(AppSettings.GetInstance().connectionString);
 
             using (var conn = new MySqlConnection(connectionString))
             {
