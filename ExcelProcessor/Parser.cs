@@ -5,7 +5,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
+using static ExcelProcessor.Helpers.Utility;
 
 namespace ExcelProcessor
 {
@@ -86,7 +88,9 @@ namespace ExcelProcessor
             if (new T() is CpgProductHierarchy)
             {
                 var cpgHierarchy = CpgProductHierarchyTree.GetTreeNodes(data as List<CpgProductHierarchy>);
-                db.Insert(cpgHierarchy);
+                db.Insert(cpgHierarchy);                
+                
+                db.ConvertToNull($"{GetDbTable<TreeNode>()}", "ParentId", "-1");
             }
         }
     }

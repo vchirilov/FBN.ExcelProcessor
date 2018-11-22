@@ -8,6 +8,7 @@ using System.Data;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using static ExcelProcessor.Helpers.Utility;
 
 namespace ExcelProcessor
 {
@@ -27,12 +28,11 @@ namespace ExcelProcessor
             foreach (var prop in AttributeHelper.GetSortedProperties<T>())
                 columns += $",`{prop.Name}`";
             columns = columns.TrimStart(',');
-
-
-            var modelAttr = (ModelAttribute)typeof(T).GetCustomAttribute(typeof(ModelAttribute));
+                                    
+            var dbTable = GetDbTable<T>();
             var connectionString = AppSettings.GetInstance().connectionString;
 
-            ExecuteNonQuery($"TRUNCATE TABLE {modelAttr.Table};", $"Truncate has failed for table {modelAttr.Table}");
+            ExecuteNonQuery($"TRUNCATE TABLE {dbTable};", $"Truncate has failed for table {dbTable}");
 
             using (var conn = new MySqlConnection(connectionString))
             {                
@@ -57,7 +57,7 @@ namespace ExcelProcessor
                         rows.Add("(" + parameters.TrimStart(',') + ")");
                     }
 
-                    var text = new StringBuilder($"INSERT INTO {modelAttr.Table} ({columns}) VALUES ");
+                    var text = new StringBuilder($"INSERT INTO {dbTable} ({columns}) VALUES ");
                     text.Append(string.Join(",", rows));
                     text.Append(";");
 
@@ -78,6 +78,11 @@ namespace ExcelProcessor
 
             Console.WriteLine($"{typeof(T).Name} loaded.");
         }        
+
+        public void ConvertToNull(string table, string column, string value)
+        {
+            ExecuteNonQuery($"UPDATE `{table}` SET {column} = NULL WHERE {column} = '{value}';");
+        }
 
         private void ExecuteNonQuery(string sqlStatement, string message = "SQL execution has failed")
         {
@@ -102,30 +107,5 @@ namespace ExcelProcessor
             }
 
         }        
-
-        private IEnumerable<List<T>> GetChunks<T>(List<T> source, int size = 10)
-        {
-            for (int i = 0; i < source.Count; i += size)
-            {
-                yield return source.GetRange(i, Math.Min(size, source.Count - i));
-            }
-        }
-
-        private Dictionary<string, object> DictionaryFromType(object customType)
-        {
-            if (customType == null)
-                return new Dictionary<string, object>();
-
-            var props = AttributeHelper.GetSortedProperties(customType);
-
-            Dictionary<string, object> dict = new Dictionary<string, object>();
-
-            foreach (PropertyInfo prop in props)
-            {
-                object value = prop.GetValue(customType, new object[] { });
-                dict.Add(prop.Name, value);
-            }
-            return dict;
-        }
     }
 }

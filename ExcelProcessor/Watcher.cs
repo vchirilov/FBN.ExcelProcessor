@@ -41,7 +41,6 @@ namespace ExcelProcessor
             {
                 Console.WriteLine($"Exception has occured with message {exc.Message}");
             }
-            
 
             FileManager.DeleteFile();
         }

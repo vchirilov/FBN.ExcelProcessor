@@ -13,4 +13,20 @@ namespace ExcelProcessor.Models
         [Order(4)] public int Lft { get; set; }
         [Order(5)] public int Rgt { get; set; }
     }
+
+    public class TreeNodeComparer : IEqualityComparer<TreeNode>
+    {
+        public bool Equals(TreeNode x, TreeNode y)
+        {
+            if (x.Id == y.Id && x.ParentId == y.ParentId && x.Name.Equals(y.Name,StringComparison.CurrentCultureIgnoreCase))
+                return true;
+
+            return false;
+        }
+        public int GetHashCode(TreeNode codeh)
+        {
+            return 0;
+        }
+
+    }
 }
