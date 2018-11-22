@@ -88,8 +88,8 @@ namespace ExcelProcessor
             if (new T() is CpgProductHierarchy)
             {
                 var cpgHierarchy = CpgProductHierarchyTree.GetTreeNodes(data as List<CpgProductHierarchy>);
+
                 db.Insert(cpgHierarchy);                
-                
                 db.ConvertToNull($"{GetDbTable<TreeNode>()}", "ParentId", "-1");
             }
         }
