@@ -7,9 +7,9 @@ namespace ExcelProcessor.Models
     [Model(Table = "cpg_hierarchy")]
     public class TreeNode
     {
-        [Order(1)] public int Id { get; set; }
+        [Order(1)] public int Hid { get; set; }
         [Order(2)] public int ParentId { get; set; }
-        [Order(3)] public string Name { get; set; }
+        [Order(3)] public string Value { get; set; }
         [Order(4)] public int Lft { get; set; }
         [Order(5)] public int Rgt { get; set; }
     }
@@ -18,7 +18,7 @@ namespace ExcelProcessor.Models
     {
         public bool Equals(TreeNode x, TreeNode y)
         {
-            if (x.Id == y.Id && x.ParentId == y.ParentId && x.Name.Equals(y.Name,StringComparison.CurrentCultureIgnoreCase))
+            if (x.Hid == y.Hid && x.ParentId == y.ParentId && x.Value.Equals(y.Value,StringComparison.CurrentCultureIgnoreCase))
                 return true;
 
             return false;
