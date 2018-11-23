@@ -16,7 +16,7 @@ namespace ExcelProcessor
     {
         private readonly int BATCH = 100;
         private readonly MySqlConnection sqlConnection;
-        private string ConnectionString { get; } = AppSettings.GetInstance().connectionString;
+        private string ConnectionString { get; } = Decode(AppSettings.GetInstance().connectionString);
 
         public DbFacade()
         {
