@@ -50,5 +50,11 @@ namespace ExcelProcessor.Helpers
             var base64EncodedBytes = System.Convert.FromBase64String(base64EncodedData);
             return System.Text.Encoding.UTF8.GetString(base64EncodedBytes);
         }
+        
+        public static void Log(string txt)
+        {
+            Console.WriteLine();
+            Console.WriteLine(txt);
+        }
     }
 }

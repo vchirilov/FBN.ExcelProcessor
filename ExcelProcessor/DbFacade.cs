@@ -14,11 +14,18 @@ namespace ExcelProcessor
 {
     public class DbFacade
     {
-        const int BATCH = 100;
+        private readonly int BATCH = 100;
+        private readonly MySqlConnection sqlConnection;
+        private string ConnectionString { get; } = AppSettings.GetInstance().connectionString;
+
+        public DbFacade()
+        {
+            sqlConnection = new MySqlConnection(ConnectionString);
+        }       
 
         public void Insert<T>(List<T> items) where T : new()
         {
-            Console.WriteLine($"{typeof(T).Name} data loading into database...");
+            Log($"{typeof(T).Name} data loading into database...");
             
             var chunks = GetChunks(items, BATCH);
 
@@ -29,14 +36,13 @@ namespace ExcelProcessor
                 columns += $",`{prop.Name}`";
             columns = columns.TrimStart(',');
                                     
-            var dbTable = GetDbTable<T>();
-            var connectionString = Decode(AppSettings.GetInstance().connectionString);
+            var dbTable = GetDbTable<T>();            
 
             ExecuteNonQuery($"TRUNCATE TABLE {dbTable};", $"Truncate has failed for table {dbTable}");
 
-            using (var conn = new MySqlConnection(connectionString))
+            using (sqlConnection)
             {                
-                conn.Open();
+                sqlConnection.Open();
 
                 foreach (var chunk in chunks)
                 {
@@ -61,7 +67,7 @@ namespace ExcelProcessor
                     text.Append(string.Join(",", rows));
                     text.Append(";");
 
-                    using (MySqlCommand sqlCommand = new MySqlCommand(text.ToString(), conn))
+                    using (MySqlCommand sqlCommand = new MySqlCommand(text.ToString(), sqlConnection))
                     {
                         try
                         {
@@ -70,13 +76,13 @@ namespace ExcelProcessor
                         }
                         catch (Exception exc)
                         {
-                            Console.WriteLine($"Insert has failed: {exc.Message}");
+                            Log($"Insert has failed: {exc.Message}");
                         }
                     }
                 }
             }
 
-            Console.WriteLine($"{typeof(T).Name} loaded.");
+            Log($"{typeof(T).Name} loaded.");
         }        
 
         public void ConvertToNull(string table, string column, string value)
@@ -84,15 +90,22 @@ namespace ExcelProcessor
             ExecuteNonQuery($"UPDATE `{table}` SET {column} = NULL WHERE {column} = '{value}';");
         }
 
+        public void ImportDataToCore()
+        {
+            Log("Importing data from staging database to core. Please wait...");
+
+            ExecuteNonQuery("CALL fbn_core.import_data()", "Import data from staging to core has failed");
+
+            Log("Importing data from staging database to core finished succesfully.");
+        }
+
         private void ExecuteNonQuery(string sqlStatement, string message = "SQL execution has failed")
         {
-            var connectionString = Decode(AppSettings.GetInstance().connectionString);
-
-            using (var conn = new MySqlConnection(connectionString))
+            using (sqlConnection)
             {
-                conn.Open();
+                sqlConnection.Open();
 
-                using (MySqlCommand sqlCommand = new MySqlCommand(sqlStatement.ToString(), conn))
+                using (MySqlCommand sqlCommand = new MySqlCommand(sqlStatement.ToString(), sqlConnection))
                 {
                     try
                     {
@@ -101,7 +114,7 @@ namespace ExcelProcessor
                     }
                     catch (Exception exc)
                     {
-                        Console.WriteLine($"{message}: {exc.Message}");
+                        Log($"{message}: {exc.Message}");
                     }
                 }
             }

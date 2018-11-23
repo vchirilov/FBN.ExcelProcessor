@@ -1,7 +1,9 @@
 ﻿using ExcelProcessor.Helpers;
 using ExcelProcessor.Models;
 using System;
+using System.Diagnostics;
 using System.IO;
+using static ExcelProcessor.Helpers.Utility;
 
 namespace ExcelProcessor
 {
@@ -24,7 +26,10 @@ namespace ExcelProcessor
 
         private static void OnCreated(object sender, FileSystemEventArgs e)
         {
-            Console.WriteLine($"File [{e.Name}] has been created.");
+            Stopwatch stopWatch = new Stopwatch();
+            stopWatch.Start();
+
+            Log($"File [{e.Name}] has been created.");
                         
             try
             {
@@ -36,19 +41,28 @@ namespace ExcelProcessor
                 Parser.Run<RetailerProductHierarchy>();
                 Parser.Run<Cpgpl>();
                 Parser.Run<CPGReferenceMonthlyPlan>();
+
+                DbFacade dbCore = new DbFacade();
+                dbCore.ImportDataToCore();
             }
             catch (Exception exc)
             {
-                Console.WriteLine($"Exception has occured with message {exc.Message}");
+                Log($"Exception has occured with message {exc.Message}");
             }
+
+            stopWatch.Stop();
+            TimeSpan ts = stopWatch.Elapsed;
+
+            string elapsedTime = string.Format("{0:00}:{1:00}:{2:00}.{3:00}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10);
+            Log($"Import duration: {elapsedTime}");
+
 
             FileManager.DeleteFile();
         }
 
         private static void OnDeleted(object sender, FileSystemEventArgs e)
-        {
-            Console.WriteLine();
-            Console.WriteLine($"File [{e.Name}] has been deleted.");
+        {            
+            Log($"File [{e.Name}] has been deleted.");
         }
 
 
