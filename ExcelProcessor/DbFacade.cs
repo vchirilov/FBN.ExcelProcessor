@@ -16,7 +16,7 @@ namespace ExcelProcessor
     {
         private readonly int BATCH = 100;
         private readonly MySqlConnection sqlConnection;
-        private string ConnectionString { get; } = Decode(AppSettings.GetInstance().connectionString);
+        private string ConnectionString { get; } = AppSettings.GetInstance().connectionString;
 
         public DbFacade()
         {
@@ -25,7 +25,7 @@ namespace ExcelProcessor
 
         public void Insert<T>(List<T> items) where T : new()
         {
-            Log($"{typeof(T).Name} data loading into database...");
+            LogInfo($"{typeof(T).Name} data loading into database...");
             
             var chunks = GetChunks(items, BATCH);
 
@@ -76,13 +76,13 @@ namespace ExcelProcessor
                         }
                         catch (Exception exc)
                         {
-                            Log($"Insert has failed: {exc.Message}");
+                            LogInfo($"Insert has failed: {exc.Message}");
                         }
                     }
                 }
             }
 
-            Log($"{typeof(T).Name} loaded.");
+            LogInfo($"{typeof(T).Name} loaded.");
         }        
 
         public void ConvertToNull(string table, string column, string value)
@@ -90,13 +90,13 @@ namespace ExcelProcessor
             ExecuteNonQuery($"UPDATE `{table}` SET {column} = NULL WHERE {column} = '{value}';");
         }
 
-        public void ImportDataToCore()
+        public void ImportDataToCore(bool isMonthlyPlanOnly)
         {
-            Log("Importing data from staging database to core. Please wait...");
+            LogInfo("Importing data from staging database to core. Please wait...");
 
             ExecuteNonQuery("CALL fbn_core.import_data()", "Import data from staging to core has failed");
 
-            Log("Importing data from staging database to core finished succesfully.");
+            LogInfo("Importing data from staging database to core finished succesfully.");
         }
 
         private void ExecuteNonQuery(string sqlStatement, string message = "SQL execution has failed")
@@ -114,7 +114,7 @@ namespace ExcelProcessor
                     }
                     catch (Exception exc)
                     {
-                        Log($"{message}: {exc.Message}");
+                        LogInfo($"{message}: {exc.Message}");
                     }
                 }
             }

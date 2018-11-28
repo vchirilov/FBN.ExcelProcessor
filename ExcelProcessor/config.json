@@ -1,4 +1,4 @@
 {
-  "connectionString": "c2VydmVyPWxvY2FsaG9zdDtwb3J0PTMzMDY7ZGF0YWJhc2U9ZmJuX3N0YWdpbmc7dXNlcj1yb290O3Bhc3N3b3JkPXNwYXJ0YWtfMTtkZWZhdWx0IGNvbW1hbmQgdGltZW91dD02MDA7",
+  "connectionString": "server=localhost;port=3306;database=fbn_staging;user=root;password=spartak_1;default command timeout=600;",
   "sheets": [ "ProductAttributes", "MarketOverview", "CpgProductHierarchy", "SellOutData", "RetailerPL", "RetailerProductHierarchy", "CPGPL", "CPGReferenceMonthlyPlan" ]
 }

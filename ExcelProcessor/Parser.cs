@@ -1,4 +1,5 @@
-﻿using ExcelProcessor.Helpers;
+﻿using ExcelProcessor.Config;
+using ExcelProcessor.Helpers;
 using ExcelProcessor.Models;
 using OfficeOpenXml;
 using System;
@@ -15,71 +16,48 @@ namespace ExcelProcessor
     {
         public static void Run<T>() where T : IModel, new()
         {
-            var sheet = typeof(T).Name;            
+            var sheet = typeof(T).Name;
             var data = new List<T>();
-            var attempts = 0;
 
-            while (true)
+            using (ExcelPackage package = new ExcelPackage(FileManager.File))
             {                
-                try
+                LogInfo($"{sheet} is being initialized...");
+
+                using (ExcelWorksheet worksheet = package.Workbook.Worksheets[sheet])
                 {
-                    using (ExcelPackage package = new ExcelPackage(FileManager.File))
+                    int rowCount = worksheet.Dimension.Rows;
+                    int colCount = worksheet.Dimension.Columns;
+
+                    //Fetch data from spreadsheet file
+                    for (int row = 2; row <= rowCount; row++)
                     {
-                        Console.WriteLine();
-                        Console.WriteLine($"{sheet} is being initialized...");
+                        T obj = new T();
+                        var col = 1;
 
-                        //If sheet doesn't exist, exit the method
-                        if (package.Workbook.Worksheets.Where(x => x.Name.Equals(sheet, StringComparison.CurrentCultureIgnoreCase)).FirstOrDefault() == null)
+                        foreach (var prop in AttributeHelper.GetSortedProperties<T>())
                         {
-                            Console.WriteLine($"Worksheet {sheet} is missing in input file.");
-                            return;
-                        }                        
+                            object value = worksheet.Cells[row, col].Value;
 
-                        using (ExcelWorksheet worksheet = package.Workbook.Worksheets[sheet])
-                        {
-                            int rowCount = worksheet.Dimension.Rows;
-                            int colCount = worksheet.Dimension.Columns;                            
-
-                            //Fetch data from spreadsheet file
-                            for (int row = 2; row <= rowCount; row++)
+                            switch (prop.PropertyType.Name)
                             {
-                                dynamic obj = new T();
-                                var col = 1;
-
-                                foreach (var prop in AttributeHelper.GetSortedProperties<T>())
-                                {
-                                    object value = worksheet.Cells[row, col].Value;
-
-                                    switch (prop.PropertyType.Name)
-                                    {
-                                        case "Int32":
-                                            value = Convert.ToInt32(value);
-                                            break;
-                                        case "Decimal":
-                                            value = Convert.ToDecimal(value);
-                                            break;
-                                        default:
-                                            break;
-                                    }
-
-                                    typeof(T).GetProperty($"{prop.Name}").SetValue(obj, value);
-                                    col++;
-                                }
-
-                                if (!obj.IsEmpty())
-                                    data.Add(obj);
+                                case "Int32":
+                                    value = Convert.ToInt32(value);
+                                    break;
+                                case "Decimal":
+                                    value = Convert.ToDecimal(value);
+                                    break;
+                                default:
+                                    break;
                             }
-                        }
-                    }
 
-                    break;
+                            typeof(T).GetProperty($"{prop.Name}").SetValue(obj, value);
+                            col++;
+                        }
+
+                        if (!obj.IsEmpty())
+                            data.Add(obj);
+                    }
                 }
-                catch (IOException)
-                {
-                    Thread.Sleep(500);
-                    Console.WriteLine("File copy in process...");                    
-                    if (++attempts >= 20) break;
-                }                
             }
 
             DbFacade db = new DbFacade();
@@ -92,6 +70,26 @@ namespace ExcelProcessor
             //    db.Insert(cpgHierarchy);                
             //    db.ConvertToNull($"{GetDbTable<TreeNode>()}", "ParentId", "-1");
             //}
+        }
+        
+        public static bool IsWorkbookValid()
+        {
+            LogInfo("Workook is being validated...");
+            using (ExcelPackage package = new ExcelPackage(FileManager.File))
+            {
+                var confSheets = AppSettings.GetInstance().sheets;
+                var workookSheets = package.Workbook.Worksheets.Select(x => x.Name.ToLower()).ToArray();
+
+                //Validate if only sheet CPGReferenceMonthlyPlan is available
+                if (workookSheets.Length == 1 && workookSheets[0].ToLower() == "CPGReferenceMonthlyPlan".ToLower())
+                {
+                    ApplicationState.IsMonthlyPlanOnly = true;
+                    return true;
+                }
+
+                //Validate if all sheets available
+                return confSheets.All(x => workookSheets.Contains(x.ToLower()));
+            }
         }
     }
 }

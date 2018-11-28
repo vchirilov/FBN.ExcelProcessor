@@ -51,9 +51,8 @@ namespace ExcelProcessor.Helpers
             return System.Text.Encoding.UTF8.GetString(base64EncodedBytes);
         }
         
-        public static void Log(string txt)
+        public static void LogInfo(string txt)
         {
-            Console.WriteLine();
             Console.WriteLine(txt);
         }
     }

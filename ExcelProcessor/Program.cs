@@ -28,7 +28,6 @@ namespace ExcelProcessor
             Console.WriteLine("WARNING: Press any key to close the service.");
             Console.ForegroundColor = ConsoleColor.White;
             Console.WriteLine("*********************************************");
-            Console.WriteLine();
         }
     }
 }

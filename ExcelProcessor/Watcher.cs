@@ -1,8 +1,10 @@
 ﻿using ExcelProcessor.Helpers;
 using ExcelProcessor.Models;
+using OfficeOpenXml;
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
 using static ExcelProcessor.Helpers.Utility;
 
 namespace ExcelProcessor
@@ -26,35 +28,52 @@ namespace ExcelProcessor
 
         private static void OnCreated(object sender, FileSystemEventArgs e)
         {
-            Stopwatch stopWatch = new Stopwatch();
-            stopWatch.Start();
+            WaitForFile();
 
-            Log($"File [{e.Name}] has been created.");
+            LogInfo($"File [{e.Name}] has been created.");
+
+            if (!Parser.IsWorkbookValid())
+            {
+                LogInfo("Workbook has failed validation.");
+                return;
+            }
+
+            Stopwatch stopWatch = new Stopwatch();
+            stopWatch.Start();           
                         
             try
             {
-                Parser.Run<ProductAttributes>();
-                Parser.Run<MarketOverview>();
-                Parser.Run<CpgProductHierarchy>();
-                Parser.Run<SellOutData>();
-                Parser.Run<RetailerPL>();
-                Parser.Run<RetailerProductHierarchy>();
-                Parser.Run<Cpgpl>();
-                Parser.Run<CPGReferenceMonthlyPlan>();
+                var isMonthlyPlanOnly = ApplicationState.IsMonthlyPlanOnly;
+
+                if (isMonthlyPlanOnly)
+                {
+                    Parser.Run<CPGReferenceMonthlyPlan>();
+                }
+                else
+                {
+                    Parser.Run<ProductAttributes>();
+                    Parser.Run<MarketOverview>();
+                    Parser.Run<CpgProductHierarchy>();
+                    Parser.Run<SellOutData>();
+                    Parser.Run<RetailerPL>();
+                    Parser.Run<RetailerProductHierarchy>();
+                    Parser.Run<Cpgpl>();
+                    Parser.Run<CPGReferenceMonthlyPlan>();
+                }                
 
                 DbFacade dbCore = new DbFacade();
-                dbCore.ImportDataToCore();
+                dbCore.ImportDataToCore(isMonthlyPlanOnly);
             }
             catch (Exception exc)
             {
-                Log($"Exception has occured with message {exc.Message}");
+                LogInfo($"Exception has occured with message {exc.Message}");
             }
 
             stopWatch.Stop();
             TimeSpan ts = stopWatch.Elapsed;
 
             string elapsedTime = string.Format("{0:00}:{1:00}:{2:00}.{3:00}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10);
-            Log($"Import duration: {elapsedTime}");
+            LogInfo($"Import duration: {elapsedTime}");
 
 
             FileManager.DeleteFile();
@@ -62,9 +81,30 @@ namespace ExcelProcessor
 
         private static void OnDeleted(object sender, FileSystemEventArgs e)
         {            
-            Log($"File [{e.Name}] has been deleted.");
+            LogInfo($"File [{e.Name}] has been deleted.");
         }
 
+        private static void WaitForFile()
+        {
+            var attempts = 0;
 
+            while (true)
+            {
+                try
+                {
+                    using (ExcelPackage package = new ExcelPackage(FileManager.File))
+                    { }
+
+                    break;
+                }               
+
+                catch (IOException)
+                {
+                    Thread.Sleep(500);
+                    Console.WriteLine("File copy in process...");
+                    if (++attempts >= 20) break;
+                }
+            }
+        }
     }
 }
