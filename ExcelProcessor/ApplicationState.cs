@@ -6,6 +6,13 @@ namespace ExcelProcessor
 {
     public static class ApplicationState
     {
-        public static bool IsMonthlyPlanOnly { get; set; } = false;
+        public static bool HasRequiredSheets { get; set; } = false;
+        public static bool HasMonthlyPlanSheet { get; set; } = false;
+
+        public static void ResetState()
+        {
+            HasRequiredSheets = false;
+            HasMonthlyPlanSheet = false;
+        }
     }
 }

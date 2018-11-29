@@ -78,17 +78,15 @@ namespace ExcelProcessor
             using (ExcelPackage package = new ExcelPackage(FileManager.File))
             {
                 var confSheets = AppSettings.GetInstance().sheets;
-                var workookSheets = package.Workbook.Worksheets.Select(x => x.Name.ToLower()).ToArray();
+                var workookSheets = package.Workbook.Worksheets.Select(x => x.Name).ToArray();
 
-                //Validate if only sheet CPGReferenceMonthlyPlan is available
-                if (workookSheets.Length == 1 && workookSheets[0].ToLower() == "CPGReferenceMonthlyPlan".ToLower())
-                {
-                    ApplicationState.IsMonthlyPlanOnly = true;
-                    return true;
-                }
+                if (confSheets.All(x => workookSheets.Contains(x, StringComparer.OrdinalIgnoreCase)))
+                    ApplicationState.HasRequiredSheets = true;
 
-                //Validate if all sheets available
-                return confSheets.All(x => workookSheets.Contains(x.ToLower()));
+                if (workookSheets.Any(x => x.Contains("CPGReferenceMonthlyPlan", StringComparison.OrdinalIgnoreCase)))
+                    ApplicationState.HasMonthlyPlanSheet = true;
+
+                return ApplicationState.HasRequiredSheets || ApplicationState.HasMonthlyPlanSheet;
             }
         }
     }

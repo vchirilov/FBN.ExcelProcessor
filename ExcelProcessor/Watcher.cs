@@ -39,17 +39,13 @@ namespace ExcelProcessor
             }
 
             Stopwatch stopWatch = new Stopwatch();
-            stopWatch.Start();           
-                        
+            stopWatch.Start();
+
+            ApplicationState.ResetState();
+
             try
             {
-                var isMonthlyPlanOnly = ApplicationState.IsMonthlyPlanOnly;
-
-                if (isMonthlyPlanOnly)
-                {
-                    Parser.Run<CPGReferenceMonthlyPlan>();
-                }
-                else
+                if (ApplicationState.HasRequiredSheets)
                 {
                     Parser.Run<ProductAttributes>();
                     Parser.Run<MarketOverview>();
@@ -61,8 +57,11 @@ namespace ExcelProcessor
                     Parser.Run<CPGReferenceMonthlyPlan>();
                 }                
 
+                if (ApplicationState.HasMonthlyPlanSheet)
+                    Parser.Run<CPGReferenceMonthlyPlan>();
+
                 DbFacade dbCore = new DbFacade();
-                dbCore.ImportDataToCore(isMonthlyPlanOnly);
+                dbCore.ImportDataToCore(ApplicationState.HasMonthlyPlanSheet);                
             }
             catch (Exception exc)
             {

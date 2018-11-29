@@ -1,4 +1,4 @@
 {
   "connectionString": "server=localhost;port=3306;database=fbn_staging;user=root;password=spartak_1;default command timeout=600;",
-  "sheets": [ "ProductAttributes", "MarketOverview", "CpgProductHierarchy", "SellOutData", "RetailerPL", "RetailerProductHierarchy", "CPGPL", "CPGReferenceMonthlyPlan" ]
+  "sheets": [ "ProductAttributes", "MarketOverview", "CpgProductHierarchy", "SellOutData", "RetailerPL", "RetailerProductHierarchy", "CPGPL"]
 }
