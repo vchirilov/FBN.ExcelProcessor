@@ -9,7 +9,7 @@ namespace ExcelProcessor
         public static bool HasRequiredSheets { get; set; } = false;
         public static bool HasMonthlyPlanSheet { get; set; } = false;
 
-        public static void ResetState()
+        public static void Reset()
         {
             HasRequiredSheets = false;
             HasMonthlyPlanSheet = false;

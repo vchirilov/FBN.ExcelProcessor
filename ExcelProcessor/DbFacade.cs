@@ -90,11 +90,11 @@ namespace ExcelProcessor
             ExecuteNonQuery($"UPDATE `{table}` SET {column} = NULL WHERE {column} = '{value}';");
         }
 
-        public void ImportDataToCore(bool isMonthlyPlanOnly)
+        public void LoadFromStagingToCore(bool includeRequired, bool includeMonthlyPlan)
         {
             LogInfo("Importing data from staging database to core. Please wait...");
 
-            ExecuteNonQuery("CALL fbn_core.import_data()", "Import data from staging to core has failed");
+            ExecuteNonQuery($"CALL fbn_core.import_data_extended('{includeRequired.ToString()}','{includeMonthlyPlan.ToString()}')", "Import data from staging to core has failed");
 
             LogInfo("Importing data from staging database to core finished succesfully.");
         }

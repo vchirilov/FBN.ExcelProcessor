@@ -39,9 +39,7 @@ namespace ExcelProcessor
             }
 
             Stopwatch stopWatch = new Stopwatch();
-            stopWatch.Start();
-
-            ApplicationState.ResetState();
+            stopWatch.Start();            
 
             try
             {
@@ -61,11 +59,17 @@ namespace ExcelProcessor
                     Parser.Run<CPGReferenceMonthlyPlan>();
 
                 DbFacade dbCore = new DbFacade();
-                dbCore.ImportDataToCore(ApplicationState.HasMonthlyPlanSheet);                
+                dbCore.LoadFromStagingToCore
+                    (ApplicationState.HasRequiredSheets, 
+                    ApplicationState.HasMonthlyPlanSheet);                
             }
             catch (Exception exc)
             {
                 LogInfo($"Exception has occured with message {exc.Message}");
+            }
+            finally
+            {
+                ApplicationState.Reset();
             }
 
             stopWatch.Stop();
