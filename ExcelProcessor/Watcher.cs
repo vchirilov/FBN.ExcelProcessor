@@ -28,18 +28,34 @@ namespace ExcelProcessor
 
         private static void OnCreated(object sender, FileSystemEventArgs e)
         {
-            WaitForFile();
+            WaitForFile(e);
+            Run();
+            FileManager.DeleteFile();
+        }
 
-            LogInfo($"File [{e.Name}] has been created.");
+        private static void OnDeleted(object sender, FileSystemEventArgs e)
+        {
+            LogInfo($"File [{e.Name}] has been deleted.");
+        }
 
+        private static void Run()
+        {
+            //Validate Workbook
             if (!Parser.IsWorkbookValid())
             {
-                LogInfo("Workbook has failed validation.");
+                LogInfo("Workbook has failed validation.");            
                 return;
             }
 
+            if (!ValidateAllPages())
+            {
+                LogInfo("Sheets validation has failed.");
+                return;
+            }
+
+            
             Stopwatch stopWatch = new Stopwatch();
-            stopWatch.Start();            
+            stopWatch.Start();
 
             try
             {
@@ -53,15 +69,15 @@ namespace ExcelProcessor
                     Parser.Run<RetailerProductHierarchy>();
                     Parser.Run<Cpgpl>();
                     Parser.Run<CPGReferenceMonthlyPlan>();
-                }                
+                }
 
                 if (ApplicationState.HasMonthlyPlanSheet)
                     Parser.Run<CPGReferenceMonthlyPlan>();
 
                 DbFacade dbCore = new DbFacade();
                 dbCore.LoadFromStagingToCore
-                    (ApplicationState.HasRequiredSheets, 
-                    ApplicationState.HasMonthlyPlanSheet);                
+                    (ApplicationState.HasRequiredSheets,
+                    ApplicationState.HasMonthlyPlanSheet);
             }
             catch (Exception exc)
             {
@@ -77,17 +93,39 @@ namespace ExcelProcessor
 
             string elapsedTime = string.Format("{0:00}:{1:00}:{2:00}.{3:00}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10);
             LogInfo($"Import duration: {elapsedTime}");
-
-
-            FileManager.DeleteFile();
         }
 
-        private static void OnDeleted(object sender, FileSystemEventArgs e)
-        {            
-            LogInfo($"File [{e.Name}] has been deleted.");
+        private static bool ValidateAllPages()
+        {
+            if (ApplicationState.HasRequiredSheets)
+            {
+                if (!Parser.IsPageValid<ProductAttributes>())
+                    return false;
+                if (!Parser.IsPageValid<MarketOverview>())
+                    return false;
+                if (!Parser.IsPageValid<CpgProductHierarchy>())
+                    return false;
+                if (!Parser.IsPageValid<SellOutData>())
+                    return false;
+                if (!Parser.IsPageValid<RetailerPL>())
+                    return false;
+                if (!Parser.IsPageValid<RetailerProductHierarchy>())
+                    return false;
+                if (!Parser.IsPageValid<Cpgpl>())
+                    return false;
+            }
+
+            if (ApplicationState.HasMonthlyPlanSheet)
+            {
+                if (!Parser.IsPageValid<CPGReferenceMonthlyPlan>())
+                    return false;
+            }                
+
+            return true;
         }
 
-        private static void WaitForFile()
+
+        private static void WaitForFile(FileSystemEventArgs arg)
         {
             var attempts = 0;
 
@@ -96,7 +134,9 @@ namespace ExcelProcessor
                 try
                 {
                     using (ExcelPackage package = new ExcelPackage(FileManager.File))
-                    { }
+                    {
+                        LogInfo($"File [{arg.Name}] has been created.");
+                    }
 
                     break;
                 }               

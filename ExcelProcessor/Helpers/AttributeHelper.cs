@@ -21,5 +21,10 @@ namespace ExcelProcessor.Helpers
               .GetProperties()
               .OrderBy(p => ((OrderAttribute)p.GetCustomAttribute(typeof(OrderAttribute), false)).Key);
         }
+
+        public static PropertyInfo GetPropertyByKey<T>(int orderKey) => typeof(T).GetProperties()
+            .Where(p => ((OrderAttribute)p.GetCustomAttribute(typeof(OrderAttribute), false)).Key.Equals(orderKey))
+            .FirstOrDefault();
+
     }
 }

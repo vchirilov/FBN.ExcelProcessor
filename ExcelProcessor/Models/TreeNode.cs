@@ -23,7 +23,7 @@ namespace ExcelProcessor.Models
 
             return false;
         }
-        public int GetHashCode(TreeNode codeh)
+        public int GetHashCode(TreeNode x)
         {
             return 0;
         }

@@ -28,7 +28,7 @@ namespace ExcelProcessor.Models
         [Order(19)] public string Type { get; set; }
         [Order(20)] public string Form { get; set; }
         [Order(21)] public string PackType { get; set; }
-        [Order(22)] public string ActualPackSize { get; set; }
+        [Order(22)] public double ActualPackSize { get; set; }
         [Order(23)] public string CoreBenefit { get; set; }
         [Order(24)] public string Variant { get; set; }
         [Order(25)] public string TargetArea { get; set; }

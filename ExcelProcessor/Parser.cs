@@ -28,34 +28,51 @@ namespace ExcelProcessor
                     int rowCount = worksheet.Dimension.Rows;
                     int colCount = worksheet.Dimension.Columns;
 
-                    //Fetch data from spreadsheet file
-                    for (int row = 2; row <= rowCount; row++)
+                    try
                     {
-                        T obj = new T();
-                        var col = 1;
-
-                        foreach (var prop in AttributeHelper.GetSortedProperties<T>())
+                        //Fetch data from spreadsheet file
+                        for (int row = 2; row <= rowCount; row++)
                         {
-                            object value = worksheet.Cells[row, col].Value;
+                            T obj = new T();
+                            var col = 1;
 
-                            switch (prop.PropertyType.Name)
+                            foreach (var prop in AttributeHelper.GetSortedProperties<T>())
                             {
-                                case "Int32":
-                                    value = Convert.ToInt32(value);
-                                    break;
-                                case "Decimal":
-                                    value = Convert.ToDecimal(value);
-                                    break;
-                                default:
-                                    break;
+                                object value = worksheet.Cells[row, col].Value;
+
+                                try
+                                {
+                                    switch (prop.PropertyType.Name)
+                                    {
+                                        case "Int32":
+                                            value = Convert.ToInt32(value);
+                                            break;
+                                        case "Decimal":
+                                            value = Convert.ToDecimal(value);
+                                            break;
+                                        default:
+                                            break;
+                                    }
+
+                                    typeof(T).GetProperty($"{prop.Name}").SetValue(obj, value);
+                                    col++;
+                                }
+                                catch (Exception innerException)
+                                {
+                                    LogInfo($"Exception occured on type convert for property {prop.Name} with message: {innerException.Message}");
+                                    throw innerException;
+                                }
+                                
                             }
 
-                            typeof(T).GetProperty($"{prop.Name}").SetValue(obj, value);
-                            col++;
-                        }
-
-                        if (!obj.IsEmpty())
-                            data.Add(obj);
+                            if (!obj.IsEmpty())
+                                data.Add(obj);
+                        }                    
+                    }
+                    catch(Exception outerException)
+                    {
+                        LogInfo($"Unhandled exception occured when parsing file with message: {outerException.Message}");
+                        throw outerException;
                     }
                 }
             }
@@ -88,6 +105,56 @@ namespace ExcelProcessor
 
                 return ApplicationState.HasRequiredSheets || ApplicationState.HasMonthlyPlanSheet;
             }
+        }
+
+        public static bool IsPageValid<T>()
+        {
+            var sheet = typeof(T).Name;
+            var response = true;
+
+            try
+            {
+                using (ExcelPackage package = new ExcelPackage(FileManager.File))
+                {
+                    LogInfo($"Sheet {sheet} is being validated...");
+
+                    using (ExcelWorksheet worksheet = package.Workbook.Worksheets[sheet])
+                    {
+                        int colCount = worksheet.Dimension.Columns;
+
+                        for (int col = 1; col <= colCount; col++)
+                        {
+                            object cellValue = worksheet.Cells[1, col].Value;
+                            if (cellValue == null)
+                                continue;
+
+                            string columnName = (string)cellValue;
+
+                            if (columnName.EndsWith("(%)"))
+                            {
+                                columnName = columnName.TrimEnd("(%)".ToArray());
+                            }
+
+                            string propName = AttributeHelper.GetPropertyByKey<T>(col).Name;
+
+                            if (!string.Equals(columnName.ReplaceSpace(), propName, StringComparison.OrdinalIgnoreCase))
+                            {
+                                LogInfo($"Column {propName} is expected but {columnName} found in sheet {sheet}.");
+                                response = false;
+                                break;
+                            }
+                            col++;
+                        }
+                    }
+                }
+            }
+            catch (Exception exc)
+            {
+                LogInfo($"Unhandled exception occured in IsPageValid() method with message: {exc.Message}");
+                return false;
+            }           
+
+            return response;
         }
     }
 }
