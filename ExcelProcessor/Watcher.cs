@@ -187,19 +187,39 @@ namespace ExcelProcessor
         {
             if (ApplicationState.HasRequiredSheets && ApplicationState.HasMonthlyPlanSheet)
             {                
-                var test1 = dsCpgpl.All(e => dsRetailerProductHierarchy.Exists(h => string.Equals(h.EAN, e.EAN)));
-                var test2 = dsCPGReferenceMonthlyPlan.All(e => dsRetailerProductHierarchy.Exists(h => string.Equals(h.EAN, e.EAN)));
+                var isValid1 = dsCpgpl.All(e => dsRetailerProductHierarchy.Exists(h => string.Equals(h.EAN, e.EAN)));
+                var isValid2 = dsCPGReferenceMonthlyPlan.All(e => dsRetailerProductHierarchy.Exists(h => string.Equals(h.EAN, e.EAN)));
 
-                return test1 && test2;
+                if (!isValid1)
+                    LogError($"EANs cross-page validation has failed for {nameof(Cpgpl)} page");
+
+                if (!isValid2)
+                    LogError($"EANs cross-page validation has failed for {nameof(CPGReferenceMonthlyPlan)} page");
+
+                return isValid1 && isValid2;
             }
 
             if (ApplicationState.HasRequiredSheets)
-                return dsCpgpl.All(e => dsRetailerProductHierarchy.Exists(h => string.Equals(h.EAN, e.EAN)));
+            {
+                var isValid = dsCpgpl.All(e => dsRetailerProductHierarchy.Exists(h => string.Equals(h.EAN, e.EAN)));
+
+                if (!isValid)
+                    LogError($"EANs cross-page validation has failed for {nameof(Cpgpl)} page");
+
+                return isValid;
+            }
+                
 
             if (ApplicationState.HasMonthlyPlanSheet)
             {
                 var dbRetailerProductHierarchy = dbFacade.GetAll<RetailerProductHierarchy>();
-                return dsCPGReferenceMonthlyPlan.All(e => dbRetailerProductHierarchy.Exists(h => string.Equals(h.EAN, e.EAN)));
+                var isValid = dsCPGReferenceMonthlyPlan.All(e => dbRetailerProductHierarchy.Exists(h => string.Equals(h.EAN, e.EAN)));
+
+                if (!isValid)
+                    LogError($"EANs cross-page validation has failed for {nameof(CPGReferenceMonthlyPlan)} page");
+
+                return isValid;
+
             }
 
             return false;
