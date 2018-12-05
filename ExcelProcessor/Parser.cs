@@ -88,13 +88,13 @@ namespace ExcelProcessor
             LogInfo("Workook is being validated...");
             using (ExcelPackage package = new ExcelPackage(FileManager.File))
             {
-                var confSheets = AppSettings.GetInstance().mainsheets;
-                var workookSheets = package.Workbook.Worksheets.Select(x => x.Name).ToArray();
+                var mainConfiguredSheets = AppSettings.GetInstance().mainsheets;
+                var worksheets = package.Workbook.Worksheets.Select(x => x.Name).ToArray();
 
-                if (confSheets.All(x => workookSheets.Contains(x, StringComparer.OrdinalIgnoreCase)))
+                if (mainConfiguredSheets.All(x => worksheets.Contains(x, StringComparer.OrdinalIgnoreCase)))
                     ApplicationState.HasRequiredSheets = true;
 
-                if (workookSheets.Any(x => x.Contains("CPGReferenceMonthlyPlan", StringComparison.OrdinalIgnoreCase)))
+                if (worksheets.Any(x => x.Contains("CPGReferenceMonthlyPlan", StringComparison.OrdinalIgnoreCase)))
                     ApplicationState.HasMonthlyPlanSheet = true;
 
                 return ApplicationState.HasRequiredSheets || ApplicationState.HasMonthlyPlanSheet;

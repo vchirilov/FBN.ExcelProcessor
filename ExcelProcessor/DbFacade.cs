@@ -89,6 +89,7 @@ namespace ExcelProcessor
             using (sqlConnection)
             {
                 sqlConnection.Open();
+
                 var sql = $"SELECT * FROM fbn_staging.{GetDbTable<T>()}";
 
                 return sqlConnection.Query<T>(sql).ToList();
