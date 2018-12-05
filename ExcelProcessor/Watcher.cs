@@ -2,8 +2,10 @@
 using ExcelProcessor.Models;
 using OfficeOpenXml;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using static ExcelProcessor.Helpers.Utility;
 
@@ -28,6 +30,8 @@ namespace ExcelProcessor
 
         private static void OnCreated(object sender, FileSystemEventArgs e)
         {
+            ClearScreen();
+            AddHeader();
             WaitForFile(e);
             Run();
             FileManager.DeleteFile();
@@ -40,6 +44,15 @@ namespace ExcelProcessor
 
         private static void Run()
         {
+            List<ProductAttributes> dsProductAttributes = null;
+            List<MarketOverview> dsMarketOverview = null;
+            List<CpgProductHierarchy> dsCpgProductHierarchy = null;
+            List<SellOutData> dsSellOutData = null;
+            List<RetailerPL> dsRetailerPL = null;
+            List<RetailerProductHierarchy> dsRetailerProductHierarchy = null;
+            List<Cpgpl> dsCpgpl = null;
+            List<CPGReferenceMonthlyPlan> dsCPGReferenceMonthlyPlan = null;
+
             //Validate Workbook
             if (!Parser.IsWorkbookValid())
             {
@@ -47,81 +60,149 @@ namespace ExcelProcessor
                 return;
             }
 
-            if (!ValidateAllPages())
+            using (var workbook = new Workbook())
             {
-                LogInfo("Sheets validation has failed.");
-                return;
-            }
+                Stopwatch stopWatch = new Stopwatch();
+                stopWatch.Start();               
 
-            
-            Stopwatch stopWatch = new Stopwatch();
-            stopWatch.Start();
-
-            try
-            {
-                if (ApplicationState.HasRequiredSheets)
+                try
                 {
-                    Parser.Run<ProductAttributes>();
-                    Parser.Run<MarketOverview>();
-                    Parser.Run<CpgProductHierarchy>();
-                    Parser.Run<SellOutData>();
-                    Parser.Run<RetailerPL>();
-                    Parser.Run<RetailerProductHierarchy>();
-                    Parser.Run<Cpgpl>();
-                    Parser.Run<CPGReferenceMonthlyPlan>();
+                    if (!ValidateAllPages(workbook))
+                    {
+                        LogInfo("Sheets validation has failed.");
+                        return;
+                    }
+
+                    foreach (var worksheet in workbook.Worksheets)
+                    {
+                        if (worksheet.Key.Equals(nameof(ProductAttributes), StringComparison.OrdinalIgnoreCase))
+                            dsProductAttributes = Parser.Parse<ProductAttributes>(worksheet.Value);
+
+                        if (worksheet.Key.Equals(nameof(MarketOverview), StringComparison.OrdinalIgnoreCase))
+                            dsMarketOverview = Parser.Parse<MarketOverview>(worksheet.Value);
+
+                        if (worksheet.Key.Equals(nameof(CpgProductHierarchy), StringComparison.OrdinalIgnoreCase))
+                            dsCpgProductHierarchy = Parser.Parse<CpgProductHierarchy>(worksheet.Value);
+
+                        if (worksheet.Key.Equals(nameof(SellOutData), StringComparison.OrdinalIgnoreCase))
+                            dsSellOutData = Parser.Parse<SellOutData>(worksheet.Value);
+
+                        if (worksheet.Key.Equals(nameof(RetailerPL), StringComparison.OrdinalIgnoreCase))
+                            dsRetailerPL = Parser.Parse<RetailerPL>(worksheet.Value);
+
+                        if (worksheet.Key.Equals(nameof(RetailerProductHierarchy), StringComparison.OrdinalIgnoreCase))
+                            dsRetailerProductHierarchy = Parser.Parse<RetailerProductHierarchy>(worksheet.Value);
+
+                        if (worksheet.Key.Equals(nameof(Cpgpl), StringComparison.OrdinalIgnoreCase))
+                            dsCpgpl = Parser.Parse<Cpgpl>(worksheet.Value);
+
+                        if (worksheet.Key.Equals(nameof(CPGReferenceMonthlyPlan), StringComparison.OrdinalIgnoreCase))
+                            dsCPGReferenceMonthlyPlan = Parser.Parse<CPGReferenceMonthlyPlan>(worksheet.Value);
+                    }
+
+                    DbFacade dbFacade = new DbFacade();
+
+                    if (!ValidateEANs(dsRetailerProductHierarchy, dsCpgpl, dsCPGReferenceMonthlyPlan, dbFacade))
+                        return;                    
+
+                    if (dsProductAttributes != null)
+                        dbFacade.Insert(dsProductAttributes);
+
+                    if (dsMarketOverview != null)
+                        dbFacade.Insert(dsMarketOverview);
+
+                    if (dsCpgProductHierarchy != null)
+                        dbFacade.Insert(dsCpgProductHierarchy);
+
+                    if (dsSellOutData != null)
+                        dbFacade.Insert(dsSellOutData);
+
+                    if (dsRetailerPL != null)
+                        dbFacade.Insert(dsRetailerPL);
+
+                    if (dsRetailerProductHierarchy != null)
+                        dbFacade.Insert(dsRetailerProductHierarchy);
+
+                    if (dsCpgpl != null)
+                        dbFacade.Insert(dsCpgpl);
+
+                    if (dsCPGReferenceMonthlyPlan != null)
+                        dbFacade.Insert(dsCPGReferenceMonthlyPlan);
+
+
+                    dbFacade.LoadFromStagingToCore
+                        (ApplicationState.HasRequiredSheets,
+                        ApplicationState.HasMonthlyPlanSheet);
+                }
+                catch (Exception exc)
+                {
+                    LogError($"Exception has occured with message {exc.Message}");
+                }
+                finally
+                {
+                    ApplicationState.Reset();
                 }
 
-                if (ApplicationState.HasMonthlyPlanSheet)
-                    Parser.Run<CPGReferenceMonthlyPlan>();
+                stopWatch.Stop();
+                TimeSpan ts = stopWatch.Elapsed;
 
-                DbFacade dbCore = new DbFacade();
-                dbCore.LoadFromStagingToCore
-                    (ApplicationState.HasRequiredSheets,
-                    ApplicationState.HasMonthlyPlanSheet);
-            }
-            catch (Exception exc)
-            {
-                LogInfo($"Exception has occured with message {exc.Message}");
-            }
-            finally
-            {
-                ApplicationState.Reset();
-            }
-
-            stopWatch.Stop();
-            TimeSpan ts = stopWatch.Elapsed;
-
-            string elapsedTime = string.Format("{0:00}:{1:00}:{2:00}.{3:00}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10);
-            LogInfo($"Import duration: {elapsedTime}");
+                string elapsedTime = string.Format("{0:00}:{1:00}:{2:00}.{3:00}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10);
+                LogInfo($"Import duration: {elapsedTime}");
+            }                
         }
 
-        private static bool ValidateAllPages()
+        private static bool ValidateAllPages(Workbook workbook)
         {
-            if (ApplicationState.HasRequiredSheets)
+            foreach (var worksheet in workbook.Worksheets)
             {
-                if (!Parser.IsPageValid<ProductAttributes>())
+                if (worksheet.Key.Equals(nameof(ProductAttributes), StringComparison.OrdinalIgnoreCase) && !Parser.IsPageValid<ProductAttributes>(worksheet.Value))
                     return false;
-                if (!Parser.IsPageValid<MarketOverview>())
+
+                if (worksheet.Key.Equals(nameof(MarketOverview), StringComparison.OrdinalIgnoreCase) && !Parser.IsPageValid<MarketOverview>(worksheet.Value))
                     return false;
-                if (!Parser.IsPageValid<CpgProductHierarchy>())
+
+                if (worksheet.Key.Equals(nameof(CpgProductHierarchy), StringComparison.OrdinalIgnoreCase) && !Parser.IsPageValid<CpgProductHierarchy>(worksheet.Value))
                     return false;
-                if (!Parser.IsPageValid<SellOutData>())
+
+                if (worksheet.Key.Equals(nameof(SellOutData), StringComparison.OrdinalIgnoreCase) && !Parser.IsPageValid<SellOutData>(worksheet.Value))
                     return false;
-                if (!Parser.IsPageValid<RetailerPL>())
+
+                if (worksheet.Key.Equals(nameof(RetailerPL), StringComparison.OrdinalIgnoreCase) && !Parser.IsPageValid<RetailerPL>(worksheet.Value))
                     return false;
-                if (!Parser.IsPageValid<RetailerProductHierarchy>())
+
+                if (worksheet.Key.Equals(nameof(RetailerProductHierarchy), StringComparison.OrdinalIgnoreCase) && !Parser.IsPageValid<RetailerProductHierarchy>(worksheet.Value))
                     return false;
-                if (!Parser.IsPageValid<Cpgpl>())
+
+                if (worksheet.Key.Equals(nameof(Cpgpl), StringComparison.OrdinalIgnoreCase) && !Parser.IsPageValid<Cpgpl>(worksheet.Value))
+                    return false;
+
+                if (worksheet.Key.Equals(nameof(CPGReferenceMonthlyPlan), StringComparison.OrdinalIgnoreCase) && !Parser.IsPageValid<CPGReferenceMonthlyPlan>(worksheet.Value))
                     return false;
             }
+
+            return true;
+        }
+
+        private static bool ValidateEANs (List<RetailerProductHierarchy> dsRetailerProductHierarchy, List<Cpgpl> dsCpgpl, List<CPGReferenceMonthlyPlan> dsCPGReferenceMonthlyPlan, DbFacade dbFacade)
+        {
+            if (ApplicationState.HasRequiredSheets && ApplicationState.HasMonthlyPlanSheet)
+            {                
+                var test1 = dsCpgpl.All(e => dsRetailerProductHierarchy.Exists(h => string.Equals(h.EAN, e.EAN)));
+                var test2 = dsCPGReferenceMonthlyPlan.All(e => dsRetailerProductHierarchy.Exists(h => string.Equals(h.EAN, e.EAN)));
+
+                return test1 && test2;
+            }
+
+            if (ApplicationState.HasRequiredSheets)
+                return dsCpgpl.All(e => dsRetailerProductHierarchy.Exists(h => string.Equals(h.EAN, e.EAN)));
 
             if (ApplicationState.HasMonthlyPlanSheet)
             {
-                if (!Parser.IsPageValid<CPGReferenceMonthlyPlan>())
-                    return false;
-            }                
+                var dbRetailerProductHierarchy = dbFacade.GetAll<RetailerProductHierarchy>();
+                return dsCPGReferenceMonthlyPlan.All(e => dbRetailerProductHierarchy.Exists(h => string.Equals(h.EAN, e.EAN)));
+            }
 
-            return true;
+            return false;
         }
 
 
@@ -144,7 +225,7 @@ namespace ExcelProcessor
                 catch (IOException)
                 {
                     Thread.Sleep(500);
-                    Console.WriteLine("File copy in process...");
+                    LogWarning("File copy in process...");
                     if (++attempts >= 20) break;
                 }
             }

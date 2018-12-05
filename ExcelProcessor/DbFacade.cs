@@ -1,18 +1,17 @@
-﻿using ExcelProcessor.Config;
+﻿using Dapper;
+using ExcelProcessor.Config;
 using ExcelProcessor.Helpers;
-using ExcelProcessor.Models;
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using static ExcelProcessor.Helpers.Utility;
 
 namespace ExcelProcessor
 {
-    public class DbFacade
+    public class DbFacade: IDisposable
     {
         private readonly int BATCH = 100;
         private readonly MySqlConnection sqlConnection;
@@ -76,14 +75,25 @@ namespace ExcelProcessor
                         }
                         catch (Exception exc)
                         {
-                            LogInfo($"Insert has failed: {exc.Message}");
+                            LogError($"Insert has failed: {exc.Message}");
                         }
                     }
                 }
             }
 
             LogInfo($"{typeof(T).Name} loaded.");
-        }        
+        }
+
+        public List<T> GetAll<T>()
+        {
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+                var sql = $"SELECT * FROM fbn_staging.{GetDbTable<T>()}";
+
+                return sqlConnection.Query<T>(sql).ToList();
+            }
+        }
 
         public void ConvertToNull(string table, string column, string value)
         {
@@ -114,11 +124,16 @@ namespace ExcelProcessor
                     }
                     catch (Exception exc)
                     {
-                        LogInfo($"{message}: {exc.Message}");
+                        LogError($"{message}: {exc.Message}");
                     }
                 }
             }
 
-        }        
-    }
+        }
+
+        public void Dispose()
+        {
+            sqlConnection.Dispose();
+        }
+    }    
 }

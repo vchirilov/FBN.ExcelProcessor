@@ -55,5 +55,40 @@ namespace ExcelProcessor.Helpers
         {
             Console.WriteLine(txt);
         }
+
+        public static void LogEmptyLine()
+        {
+            Console.WriteLine();
+        }
+
+        public static void LogError(string txt)
+        {
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine(txt);
+            Console.ForegroundColor = ConsoleColor.White;
+        }
+
+        public static void LogWarning(string txt)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine(txt);
+            Console.ForegroundColor = ConsoleColor.White;
+        }
+
+
+        public static void AddHeader()
+        {
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine("Service has started...");
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine("WARNING: Press any key to close the service.");
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.WriteLine("*********************************************");
+        }
+
+        public static void ClearScreen()
+        {
+            Console.Clear();
+        }
     }
 }

@@ -14,71 +14,65 @@ namespace ExcelProcessor
 {
     public class Parser
     {
-        public static void Run<T>() where T : IModel, new()
+        public static List<T> Parse<T>(ExcelWorksheet worksheet) where T : IModel, new()
         {
             var sheet = typeof(T).Name;
             var data = new List<T>();
 
-            using (ExcelPackage package = new ExcelPackage(FileManager.File))
-            {                
-                LogInfo($"{sheet} is being initialized...");
+            int rowCount = worksheet.Dimension.Rows;
+            int colCount = worksheet.Dimension.Columns;
 
-                using (ExcelWorksheet worksheet = package.Workbook.Worksheets[sheet])
+            try
+            {
+                //Fetch data from spreadsheet file
+                for (int row = 2; row <= rowCount; row++)
                 {
-                    int rowCount = worksheet.Dimension.Rows;
-                    int colCount = worksheet.Dimension.Columns;
+                    T obj = new T();
+                    var col = 1;
 
-                    try
+                    foreach (var prop in AttributeHelper.GetSortedProperties<T>())
                     {
-                        //Fetch data from spreadsheet file
-                        for (int row = 2; row <= rowCount; row++)
+                        object value = worksheet.Cells[row, col].Value;
+
+                        try
                         {
-                            T obj = new T();
-                            var col = 1;
-
-                            foreach (var prop in AttributeHelper.GetSortedProperties<T>())
+                            switch (prop.PropertyType.Name)
                             {
-                                object value = worksheet.Cells[row, col].Value;
-
-                                try
-                                {
-                                    switch (prop.PropertyType.Name)
-                                    {
-                                        case "Int32":
-                                            value = Convert.ToInt32(value);
-                                            break;
-                                        case "Decimal":
-                                            value = Convert.ToDecimal(value);
-                                            break;
-                                        default:
-                                            break;
-                                    }
-
-                                    typeof(T).GetProperty($"{prop.Name}").SetValue(obj, value);
-                                    col++;
-                                }
-                                catch (Exception innerException)
-                                {
-                                    LogInfo($"Exception occured on type convert for property {prop.Name} with message: {innerException.Message}");
-                                    throw innerException;
-                                }
-                                
+                                case "Int32":
+                                    value = Convert.ToInt32(value);
+                                    break;
+                                case "Decimal":
+                                    value = Convert.ToDecimal(value);
+                                    break;
+                                default:
+                                    break;
                             }
 
-                            if (!obj.IsEmpty())
-                                data.Add(obj);
-                        }                    
+                            typeof(T).GetProperty($"{prop.Name}").SetValue(obj, value);
+                            col++;
+                        }
+                        catch (Exception innerException)
+                        {
+                            LogError($"Exception occured on type convert for property {prop.Name} with message: {innerException.Message}");
+                            throw innerException;
+                        }
+
                     }
-                    catch(Exception outerException)
-                    {
-                        LogInfo($"Unhandled exception occured when parsing file with message: {outerException.Message}");
-                        throw outerException;
-                    }
+
+                    if (!obj.IsEmpty())
+                        data.Add(obj);
                 }
             }
+            catch (Exception outerException)
+            {
+                LogError($"Unhandled exception occured when parsing file with message: {outerException.Message}");
+                throw outerException;
+            }
 
-            DbFacade db = new DbFacade();
-            db.Insert(data);
+            return data;
+
+            //DbFacade db = new DbFacade();
+            //db.Insert(data);
 
             //if (new T() is CpgProductHierarchy)
             //{
@@ -94,7 +88,7 @@ namespace ExcelProcessor
             LogInfo("Workook is being validated...");
             using (ExcelPackage package = new ExcelPackage(FileManager.File))
             {
-                var confSheets = AppSettings.GetInstance().sheets;
+                var confSheets = AppSettings.GetInstance().mainsheets;
                 var workookSheets = package.Workbook.Worksheets.Select(x => x.Name).ToArray();
 
                 if (confSheets.All(x => workookSheets.Contains(x, StringComparer.OrdinalIgnoreCase)))
@@ -107,50 +101,42 @@ namespace ExcelProcessor
             }
         }
 
-        public static bool IsPageValid<T>()
+        public static bool IsPageValid<T>(ExcelWorksheet worksheet)
         {
             var sheet = typeof(T).Name;
             var response = true;
 
             try
             {
-                using (ExcelPackage package = new ExcelPackage(FileManager.File))
+                int colCount = worksheet.Dimension.Columns;
+
+                for (int col = 1; col <= colCount; col++)
                 {
-                    LogInfo($"Sheet {sheet} is being validated...");
+                    object cellValue = worksheet.Cells[1, col].Value;
+                    if (cellValue == null)
+                        continue;
 
-                    using (ExcelWorksheet worksheet = package.Workbook.Worksheets[sheet])
+                    string columnName = (string)cellValue;
+
+                    if (columnName.EndsWith("(%)"))
                     {
-                        int colCount = worksheet.Dimension.Columns;
-
-                        for (int col = 1; col <= colCount; col++)
-                        {
-                            object cellValue = worksheet.Cells[1, col].Value;
-                            if (cellValue == null)
-                                continue;
-
-                            string columnName = (string)cellValue;
-
-                            if (columnName.EndsWith("(%)"))
-                            {
-                                columnName = columnName.TrimEnd("(%)".ToArray());
-                            }
-
-                            string propName = AttributeHelper.GetPropertyByKey<T>(col).Name;
-
-                            if (!string.Equals(columnName.ReplaceSpace(), propName, StringComparison.OrdinalIgnoreCase))
-                            {
-                                LogInfo($"Column {propName} is expected but {columnName} found in sheet {sheet}.");
-                                response = false;
-                                break;
-                            }
-                            col++;
-                        }
+                        columnName = columnName.TrimEnd("(%)".ToArray());
                     }
+
+                    string propName = AttributeHelper.GetPropertyByKey<T>(col).Name;
+
+                    if (!string.Equals(columnName.ReplaceSpace(), propName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        LogInfo($"Column {propName} is expected but {columnName} found in sheet {sheet}.");
+                        response = false;
+                        break;
+                    }
+                    col++;
                 }
             }
             catch (Exception exc)
             {
-                LogInfo($"Unhandled exception occured in IsPageValid() method with message: {exc.Message}");
+                LogError($"Unhandled exception occured in IsPageValid() method with message: {exc.Message}");
                 return false;
             }           
 

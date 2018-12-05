@@ -7,7 +7,8 @@ namespace ExcelProcessor.Config
     public class ConfigModel
     {
         public string connectionString { get; set; }
-        public string[] sheets { get; set; }
+        public string[] mainsheets { get; set; }
+        public string[] additionalsheets { get; set; }
     }
 }
 
