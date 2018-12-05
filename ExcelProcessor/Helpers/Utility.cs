@@ -63,14 +63,14 @@ namespace ExcelProcessor.Helpers
 
         public static void LogError(string txt)
         {
-            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine(txt);
             Console.ForegroundColor = ConsoleColor.White;
         }
 
         public static void LogWarning(string txt)
         {
-            Console.ForegroundColor = ConsoleColor.Red;
+            Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine(txt);
             Console.ForegroundColor = ConsoleColor.White;
         }
