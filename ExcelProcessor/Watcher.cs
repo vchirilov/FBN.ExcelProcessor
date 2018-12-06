@@ -66,7 +66,7 @@ namespace ExcelProcessor
                 stopWatch.Start();               
 
                 try
-                {
+                {                    
                     if (!ValidateAllPages(workbook))
                     {
                         LogInfo("Sheets validation has failed.");
@@ -100,13 +100,16 @@ namespace ExcelProcessor
                             dsCPGReferenceMonthlyPlan = Parser.Parse<CPGReferenceMonthlyPlan>(worksheet.Value);
                     }
 
+                    if (!ValidateHistoricalData(dsCpgpl, dsRetailerPL))
+                        return;
+
                     if (!ValidateUniques(dsCpgpl, dsCpgProductHierarchy, dsCPGReferenceMonthlyPlan, dsMarketOverview, dsProductAttributes, dsRetailerPL, dsRetailerProductHierarchy, dsSellOutData))
                         return;
 
                     DbFacade dbFacade = new DbFacade();
 
                     if (!ValidateEANs(dsRetailerProductHierarchy, dsCpgpl, dsCPGReferenceMonthlyPlan, dbFacade))
-                        return;                    
+                        return;                                  
 
                     if (dsProductAttributes != null)
                         dbFacade.Insert(dsProductAttributes);
@@ -308,6 +311,27 @@ namespace ExcelProcessor
                     return false;
                 }
             }
+            return true;
+        }
+
+        private static bool ValidateHistoricalData(List<Cpgpl> dsCpgpl, List<RetailerPL> dsRetailerPL )
+        {
+            int currYear = DateTime.Now.Year;
+            int year1 = dsCpgpl.Select(x => x.Year).Min();
+            int year2 = dsCpgpl.Select(x => x.Year).Min();
+
+            if (currYear == year1)
+            {
+                LogError($"{nameof(Cpgpl)} has no historical data");
+                return false;
+            }
+
+            if (currYear == year2)
+            {
+                LogError($"{nameof(RetailerPL)} has no historical data");
+                return false;
+            }
+
             return true;
         }
 
