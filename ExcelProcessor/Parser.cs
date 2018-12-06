@@ -56,7 +56,6 @@ namespace ExcelProcessor
                             LogError($"Exception occured on type convert for property {prop.Name} with message: {innerException.Message}");
                             throw innerException;
                         }
-
                     }
 
                     if (!obj.IsEmpty())

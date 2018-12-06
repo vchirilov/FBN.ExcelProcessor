@@ -100,6 +100,9 @@ namespace ExcelProcessor
                             dsCPGReferenceMonthlyPlan = Parser.Parse<CPGReferenceMonthlyPlan>(worksheet.Value);
                     }
 
+                    if (!ValidateUniques(dsCpgpl, dsCpgProductHierarchy, dsCPGReferenceMonthlyPlan, dsMarketOverview, dsProductAttributes, dsRetailerPL, dsRetailerProductHierarchy, dsSellOutData))
+                        return;
+
                     DbFacade dbFacade = new DbFacade();
 
                     if (!ValidateEANs(dsRetailerProductHierarchy, dsCpgpl, dsCPGReferenceMonthlyPlan, dbFacade))
@@ -225,6 +228,89 @@ namespace ExcelProcessor
             return false;
         }
 
+        private static bool ValidateUniques(
+            List<Cpgpl> dsCpgpl, 
+            List<CpgProductHierarchy> dsCpgProductHierarchy, 
+            List<CPGReferenceMonthlyPlan> dsCPGReferenceMonthlyPlan, 
+            List<MarketOverview> dsMarketOverview,
+            List<ProductAttributes> dsProductAttributes,
+            List<RetailerPL> dsRetailerPL,
+            List<RetailerProductHierarchy> dsRetailerProductHierarchy,
+            List<SellOutData> dsSellOutData)
+        {
+            if (ApplicationState.HasRequiredSheets)
+            {
+                var items1 = dsCpgpl.Select(x => new { x.Year, x.YearType, x.Retailer, x.Banner, x.Country, x.EAN }).Distinct();
+
+                if (items1.Count() != dsCpgpl.Count())
+                {
+                    LogError($"Year,YearType,Retailer,Banner,Country,EAN have duplicates in {nameof(Cpgpl)}");
+                    return false;
+                }
+
+                var items2 = dsCpgProductHierarchy.Select(x => new {x.EAN}).Distinct();
+
+                if (items2.Count() != dsCpgProductHierarchy.Count())
+                {
+                    LogError($"EAN has duplicates in {nameof(CpgProductHierarchy)}");
+                    return false;
+                }
+
+                var items4 = dsMarketOverview.Select(x => new { x.Year, x.YearType, x.CPG, x.Retailer, x.Banner, x.Country, x.CategoryGroup, x.NielsenCategory, x.Market, x.MarketDesc, x.Segment, x.SubSegment }).Distinct();
+
+                if (items4.Count() != dsMarketOverview.Count())
+                {
+                    LogError($"Year,YearType,CPG,Retailer,Banner,Country,CategoryGroup,NielsenCategory,Market,MarketDesc,Segment,SubSegment have duplicates in {nameof(MarketOverview)}");
+                    return false;
+                }
+                
+                var items5 = dsProductAttributes.Select(x => new { x.EAN }).Distinct();
+
+                if (items5.Count() != dsProductAttributes.Count())
+                {
+                    LogError($"EAN has duplicates in {nameof(ProductAttributes)}");
+                    return false;
+                }
+
+                var items6 = dsRetailerPL.Select(x => new { x.Year, x.YearType, x.Retailer, x.Banner, x.Country, x.EAN }).Distinct();
+
+                if (items6.Count() != dsRetailerPL.Count())
+                {
+                    LogError($"Year,YearType,Retailer,Banner,Country,EAN have duplicates in {nameof(RetailerPL)}");
+                    return false;
+                }
+
+                var items7 = dsRetailerProductHierarchy.Select(x => new { x.Retailer, x.Banner, x.Country, x.EAN }).Distinct();
+
+                if (items7.Count() != dsRetailerProductHierarchy.Count())
+                {
+                    LogError($"Retailer,Banner,Country,EAN have duplicates in {nameof(RetailerProductHierarchy)}");
+                    return false;
+                }
+
+
+                var items8 = dsSellOutData.Select(x => new { x.Year, x.YearType, x.CPG, x.Retailer, x.Banner, x.Country, x.EAN }).Distinct();
+
+                if (items8.Count() != dsSellOutData.Count())
+                {
+                    LogError($" Year, YearType, CPG, Retailer, Banner, Country, EAN have duplicates in {nameof(SellOutData)}");
+                    return false;
+                }                
+            }
+
+            if (ApplicationState.HasMonthlyPlanSheet)
+            {
+                var items3 = dsCPGReferenceMonthlyPlan.Select(x => new { x.Year, x.YearType, x.Retailer, x.Banner, x.Country, x.EAN }).Distinct();
+
+                if (items3.Count() != dsCPGReferenceMonthlyPlan.Count())
+                {
+                    LogError($"Year,YearType,Retailer,Banner,Country,EAN have duplicates in {nameof(CPGReferenceMonthlyPlan)}");
+                    return false;
+                }
+            }
+            return true;
+        }
+
 
         private static void WaitForFile(FileSystemEventArgs arg)
         {
@@ -245,7 +331,7 @@ namespace ExcelProcessor
                 catch (IOException)
                 {
                     Thread.Sleep(500);
-                    LogWarning("File copy in process...");
+                    LogInfo("File copy in process...");
                     if (++attempts >= 20) break;
                 }
             }

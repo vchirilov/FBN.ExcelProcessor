@@ -64,7 +64,7 @@ namespace ExcelProcessor.Helpers
         public static void LogError(string txt)
         {
             Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine($"ERROR: {txt}");
+            Console.WriteLine($"ERROR: {txt}. Import has failed.");
             Console.ForegroundColor = ConsoleColor.White;
         }
 
