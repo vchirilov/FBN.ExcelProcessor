@@ -84,7 +84,10 @@ namespace ExcelProcessor
         
         public static bool IsWorkbookValid()
         {
-            LogInfo("Workook is being validated...");
+            ApplicationState.State = State.ValidatingWorkbook;
+
+            LogInfo("Workook is being validated...");            
+
             using (ExcelPackage package = new ExcelPackage(FileManager.File))
             {
                 var mainConfiguredSheets = AppSettings.GetInstance().mainsheets;

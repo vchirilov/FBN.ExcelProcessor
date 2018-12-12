@@ -32,14 +32,14 @@ namespace ExcelProcessor
         {
             ClearScreen();
             AddHeader();
-            WaitForFile(e);
+            WaitForFile(e);            
             Run();
             FileManager.DeleteFile();
         }
 
         private static void OnDeleted(object sender, FileSystemEventArgs e)
         {
-            LogInfo($"File [{e.Name}] has been deleted.");
+            LogInfo($"File [{e.Name}] has been deleted.", false);
         }
 
         private static void Run()
@@ -62,11 +62,11 @@ namespace ExcelProcessor
 
             using (var workbook = new Workbook())
             {
-                Stopwatch stopWatch = new Stopwatch();
-                stopWatch.Start();               
-
                 try
-                {                    
+                {
+                    Stopwatch stopWatch = new Stopwatch();
+                    stopWatch.Start();
+
                     if (!ValidateAllPages(workbook))
                     {
                         LogInfo("Sheets validation has failed.");
@@ -139,6 +139,14 @@ namespace ExcelProcessor
                     dbFacade.LoadFromStagingToCore
                         (ApplicationState.HasRequiredSheets,
                         ApplicationState.HasMonthlyPlanSheet);
+
+                    stopWatch.Stop();
+                    TimeSpan ts = stopWatch.Elapsed;
+
+                    ApplicationState.State = State.Finished;
+
+                    string elapsedTime = string.Format("{0:00}:{1:00}:{2:00}.{3:00}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10);
+                    LogInfo($"Import duration: {elapsedTime}");
                 }
                 catch (Exception exc)
                 {
@@ -146,19 +154,16 @@ namespace ExcelProcessor
                 }
                 finally
                 {
+                    LogInfo($"The number of database connections {DbFacade.Connections}");
                     ApplicationState.Reset();
                 }
-
-                stopWatch.Stop();
-                TimeSpan ts = stopWatch.Elapsed;
-
-                string elapsedTime = string.Format("{0:00}:{1:00}:{2:00}.{3:00}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10);
-                LogInfo($"Import duration: {elapsedTime}");
             }                
         }
 
         private static bool ValidateAllPages(Workbook workbook)
         {
+            ApplicationState.State = State.InitializingWorksheet;
+
             foreach (var worksheet in workbook.Worksheets)
             {
                 if (worksheet.Key.Equals(nameof(ProductAttributes), StringComparison.OrdinalIgnoreCase) && !Parser.IsPageValid<ProductAttributes>(worksheet.Value))
@@ -191,6 +196,8 @@ namespace ExcelProcessor
 
         private static bool ValidateEANs (List<RetailerProductHierarchy> dsRetailerProductHierarchy, List<Cpgpl> dsCpgpl, List<CPGReferenceMonthlyPlan> dsCPGReferenceMonthlyPlan, DbFacade dbFacade)
         {
+            ApplicationState.State = State.ValidatingEANs;
+
             if (ApplicationState.HasRequiredSheets && ApplicationState.HasMonthlyPlanSheet)
             {                
                 var isValid1 = dsCpgpl.All(e => dsRetailerProductHierarchy.Exists(h => string.Equals(h.EAN, e.EAN)));
@@ -213,8 +220,7 @@ namespace ExcelProcessor
                     LogError($"EANs cross-page validation has failed for {nameof(Cpgpl)} page");
 
                 return isValid;
-            }
-                
+            }                
 
             if (ApplicationState.HasMonthlyPlanSheet)
             {
@@ -241,6 +247,10 @@ namespace ExcelProcessor
             List<RetailerProductHierarchy> dsRetailerProductHierarchy,
             List<SellOutData> dsSellOutData)
         {
+            ApplicationState.State = State.ValidatingUniqueValues;
+
+            LogInfo($"Validate For Unique Values");
+
             if (ApplicationState.HasRequiredSheets)
             {
                 var items1 = dsCpgpl.Select(x => new { x.Year, x.YearType, x.Retailer, x.Banner, x.Country, x.EAN }).Distinct();
@@ -316,6 +326,10 @@ namespace ExcelProcessor
 
         private static bool ValidateHistoricalData(List<Cpgpl> dsCpgpl, List<RetailerPL> dsRetailerPL )
         {
+            ApplicationState.State = State.ValidatingHistoricalData;
+
+            LogInfo($"Validate Historical Data");
+
             int currYear = DateTime.Now.Year;
             int year1 = dsCpgpl.Select(x => x.Year).Min();
             int year2 = dsCpgpl.Select(x => x.Year).Min();
@@ -330,15 +344,17 @@ namespace ExcelProcessor
             {
                 LogError($"{nameof(RetailerPL)} has no historical data");
                 return false;
-            }
+            }           
 
             return true;
         }
 
 
         private static void WaitForFile(FileSystemEventArgs arg)
-        {
+        {            
             var attempts = 0;
+
+            ApplicationState.State = State.CopyingFile;
 
             while (true)
             {
@@ -346,6 +362,7 @@ namespace ExcelProcessor
                 {
                     using (ExcelPackage package = new ExcelPackage(FileManager.File))
                     {
+                        ApplicationState.FileName = FileManager.File.Name;
                         LogInfo($"File [{arg.Name}] has been created.");
                     }
 

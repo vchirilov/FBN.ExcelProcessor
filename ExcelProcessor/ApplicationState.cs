@@ -8,11 +8,27 @@ namespace ExcelProcessor
     {
         public static bool HasRequiredSheets { get; set; } = false;
         public static bool HasMonthlyPlanSheet { get; set; } = false;
-
+        public static string FileName { get; set; } = string.Empty;
+        public static State State { get; set; } = State.None;
         public static void Reset()
         {
             HasRequiredSheets = false;
             HasMonthlyPlanSheet = false;
+            FileName = string.Empty;
+            State = State.None;
         }
     }
+
+    public enum State
+    {
+        None,
+        CopyingFile,
+        ValidatingWorkbook,
+        InitializingWorksheet,
+        ValidatingHistoricalData,
+        ValidatingUniqueValues,
+        ValidatingEANs,
+        Loading,
+        Finished
+    };
 }

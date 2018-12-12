@@ -7,24 +7,27 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using static ExcelProcessor.Helpers.Utility;
 
 namespace ExcelProcessor
 {
-    public class DbFacade: IDisposable
+    public class DbFacade
     {
+        public static int Connections = 0;
         private readonly int BATCH = 100;
-        private readonly MySqlConnection sqlConnection;
+        private readonly MySqlConnection sqlConnection;        
         private string ConnectionString { get; } = AppSettings.GetInstance().connectionString;
 
         public DbFacade()
         {
             sqlConnection = new MySqlConnection(ConnectionString);
+            Interlocked.Increment(ref Connections);
         }       
 
         public void Insert<T>(List<T> items) where T : new()
         {
-            LogInfo($"{typeof(T).Name} data loading into database...");
+            ApplicationState.State = State.Loading;            
             
             var chunks = GetChunks(items, BATCH);
 
@@ -101,6 +104,12 @@ namespace ExcelProcessor
             ExecuteNonQuery($"UPDATE `{table}` SET {column} = NULL WHERE {column} = '{value}';");
         }
 
+        public static void LogRecord(string stage, string status, string message)
+        {
+            DbFacade db = new DbFacade();
+            db.ExecuteNonQuery($"INSERT INTO fbn_core.Logs (`FileName`,`Stage`,`Status`,`Message`) VALUES ('{ApplicationState.FileName}','{stage}','{status}','{message}');");
+        }
+
         public void LoadFromStagingToCore(bool includeRequired, bool includeMonthlyPlan)
         {
             LogInfo("Importing data from staging database to core. Please wait...");
@@ -128,13 +137,21 @@ namespace ExcelProcessor
                         LogError($"{message}: {exc.Message}");
                     }
                 }
+
+                Close(sqlConnection);
             }
 
         }
 
-        public void Dispose()
+        private void Close(MySqlConnection sqlConnection)
         {
-            sqlConnection.Dispose();
+            if (sqlConnection != null && sqlConnection.State != ConnectionState.Closed)
+                sqlConnection.Close();
+        }
+
+        ~DbFacade()
+        {
+            Interlocked.Decrement(ref Connections);
         }
     }    
 }

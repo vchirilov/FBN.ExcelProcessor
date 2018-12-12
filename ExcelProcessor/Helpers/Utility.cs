@@ -51,9 +51,14 @@ namespace ExcelProcessor.Helpers
             return System.Text.Encoding.UTF8.GetString(base64EncodedBytes);
         }
         
-        public static void LogInfo(string txt)
+        public static void LogInfo(string txt, bool save = true)
         {
             Console.WriteLine(txt);
+
+            if (save)
+            {
+                DbFacade.LogRecord(ApplicationState.State.ToString(), "Information", txt);
+            }                
         }
 
         public static void LogEmptyLine()
@@ -66,6 +71,8 @@ namespace ExcelProcessor.Helpers
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine($"ERROR: {txt}. Import has failed.");
             Console.ForegroundColor = ConsoleColor.White;
+                        
+            DbFacade.LogRecord(ApplicationState.State.ToString(), "Error", txt);
         }
 
         public static void LogWarning(string txt)
