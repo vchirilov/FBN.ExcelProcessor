@@ -107,7 +107,7 @@ namespace ExcelProcessor
         public static void LogRecord(string stage, string status, string message)
         {
             DbFacade db = new DbFacade();
-            db.ExecuteNonQuery($"INSERT INTO fbn_core.Logs (`FileName`,`Stage`,`Status`,`Message`) VALUES ('{ApplicationState.FileName}','{stage}','{status}','{message}');");
+            db.ExecuteNonQuery($"INSERT INTO fbn_logs.Logs (`UserId`,`FileName`,`Stage`,`Status`,`Message`) VALUES ('{ApplicationState.UserId}','{ApplicationState.FileName}','{stage}','{status}','{message}');");
         }
 
         public void LoadFromStagingToCore(bool includeRequired, bool includeMonthlyPlan)

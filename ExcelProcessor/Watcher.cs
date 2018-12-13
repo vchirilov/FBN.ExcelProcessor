@@ -53,6 +53,10 @@ namespace ExcelProcessor
             List<Cpgpl> dsCpgpl = null;
             List<CPGReferenceMonthlyPlan> dsCPGReferenceMonthlyPlan = null;
 
+            //Validate authenticated user
+            if (!ValidateAuthenticationUser())
+                return;
+
             //Validate Workbook
             if (!Parser.IsWorkbookValid())
             {
@@ -192,6 +196,22 @@ namespace ExcelProcessor
             }
 
             return true;
+        }
+
+        private static bool ValidateAuthenticationUser()
+        {
+            string authUser = ApplicationState.FileName.Substring2("__", "__");
+
+            if (authUser.IsNullOrEmpty())
+            {
+                LogError($"Authenticated user cannot be identified.");
+                return false;
+            }
+            else
+            {
+                ApplicationState.UserId = authUser;
+                return true;
+            }
         }
 
         private static bool ValidateEANs (List<RetailerProductHierarchy> dsRetailerProductHierarchy, List<Cpgpl> dsCpgpl, List<CPGReferenceMonthlyPlan> dsCPGReferenceMonthlyPlan, DbFacade dbFacade)
@@ -348,7 +368,6 @@ namespace ExcelProcessor
 
             return true;
         }
-
 
         private static void WaitForFile(FileSystemEventArgs arg)
         {            
