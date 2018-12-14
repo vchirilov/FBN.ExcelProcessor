@@ -124,23 +124,26 @@ namespace ExcelProcessor
             using (sqlConnection)
             {
                 sqlConnection.Open();
+                var sqlTransaction = sqlConnection.BeginTransaction();
 
-                using (MySqlCommand sqlCommand = new MySqlCommand(sqlStatement.ToString(), sqlConnection))
+                using (MySqlCommand sqlCommand = new MySqlCommand(sqlStatement.ToString(), sqlConnection, sqlTransaction))
                 {
                     try
                     {
                         sqlCommand.CommandType = CommandType.Text;
                         sqlCommand.ExecuteNonQuery();
+                        sqlTransaction.Commit();
                     }
                     catch (Exception exc)
                     {
-                        LogError($"{message}: {exc.Message}");
+                        sqlTransaction.Rollback();
+                        LogError($"Exception has occured in method {nameof(DbFacade)}.ExecuteNonQuery() with message {exc.Message}");
+                        throw exc;
                     }
                 }
 
                 Close(sqlConnection);
             }
-
         }
 
         private void Close(MySqlConnection sqlConnection)

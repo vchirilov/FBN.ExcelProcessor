@@ -1,5 +1,6 @@
 ﻿using ExcelProcessor.Helpers;
 using ExcelProcessor.Models;
+using MySql.Data.MySqlClient;
 using OfficeOpenXml;
 using System;
 using System.Collections.Generic;
@@ -30,11 +31,24 @@ namespace ExcelProcessor
 
         private static void OnCreated(object sender, FileSystemEventArgs e)
         {
-            ClearScreen();
-            AddHeader();
-            WaitForFile(e);            
-            Run();
-            FileManager.DeleteFile();
+            try
+            {
+                ClearScreen();
+                AddHeader();
+                WaitForFile(e);
+                Run();               
+            }
+            catch(Exception exc)
+            {
+                if (exc.GetType() == typeof(MySqlException))
+                    LogError($"Global Exception: {exc.Message}",false);
+                else
+                    LogError($"Global Exception: {exc.Message}");
+            }
+            finally
+            {
+                FileManager.DeleteFile();
+            }            
         }
 
         private static void OnDeleted(object sender, FileSystemEventArgs e)
@@ -60,7 +74,7 @@ namespace ExcelProcessor
             //Validate Workbook
             if (!Parser.IsWorkbookValid())
             {
-                LogInfo("Workbook has failed validation.");            
+                LogError("Workbook has failed validation.");
                 return;
             }
 
@@ -139,10 +153,7 @@ namespace ExcelProcessor
                     if (dsCPGReferenceMonthlyPlan != null)
                         dbFacade.Insert(dsCPGReferenceMonthlyPlan);
 
-
-                    dbFacade.LoadFromStagingToCore
-                        (ApplicationState.HasRequiredSheets,
-                        ApplicationState.HasMonthlyPlanSheet);
+                    dbFacade.LoadFromStagingToCore (ApplicationState.HasRequiredSheets, ApplicationState.HasMonthlyPlanSheet);
 
                     stopWatch.Stop();
                     TimeSpan ts = stopWatch.Elapsed;
@@ -154,7 +165,8 @@ namespace ExcelProcessor
                 }
                 catch (Exception exc)
                 {
-                    LogError($"Exception has occured with message {exc.Message}");
+                    LogError($"Exception has occured in method {nameof(Watcher)}.Run() with message {exc.Message}");
+                    throw exc;
                 }
                 finally
                 {
