@@ -44,6 +44,9 @@ namespace ExcelProcessor
                                 case "Decimal":
                                     value = Convert.ToDecimal(value);
                                     break;
+                                case "String":
+                                    value = Convert.ToString(value);
+                                    break;
                                 default:
                                     break;
                             }
