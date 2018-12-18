@@ -22,53 +22,45 @@ namespace ExcelProcessor
             int rowCount = worksheet.Dimension.Rows;
             int colCount = worksheet.Dimension.Columns;
 
-            try
+            //Fetch data from spreadsheet file
+            for (int row = 2; row <= rowCount; row++)
             {
-                //Fetch data from spreadsheet file
-                for (int row = 2; row <= rowCount; row++)
+                T obj = new T();
+                var col = 1;
+
+                foreach (var prop in AttributeHelper.GetSortedProperties<T>())
                 {
-                    T obj = new T();
-                    var col = 1;
+                    object value = worksheet.Cells[row, col].Value;
 
-                    foreach (var prop in AttributeHelper.GetSortedProperties<T>())
+                    try
                     {
-                        object value = worksheet.Cells[row, col].Value;
-
-                        try
+                        switch (prop.PropertyType.Name)
                         {
-                            switch (prop.PropertyType.Name)
-                            {
-                                case "Int32":
-                                    value = Convert.ToInt32(value);
-                                    break;
-                                case "Decimal":
-                                    value = Convert.ToDecimal(value);
-                                    break;
-                                case "String":
-                                    value = Convert.ToString(value);
-                                    break;
-                                default:
-                                    break;
-                            }
+                            case "Int32":
+                                value = Convert.ToInt32(value);
+                                break;
+                            case "Decimal":
+                                value = Convert.ToDecimal(value);
+                                break;
+                            case "String":
+                                value = Convert.ToString(value);
+                                break;
+                            default:
+                                break;
+                        }
 
-                            typeof(T).GetProperty($"{prop.Name}").SetValue(obj, value);
-                            col++;
-                        }
-                        catch (Exception innerException)
-                        {
-                            LogError($"Exception occured on type convert for property {prop.Name} with message: {innerException.Message}");
-                            throw innerException;
-                        }
+                        typeof(T).GetProperty($"{prop.Name}").SetValue(obj, value);
+                        col++;
                     }
-
-                    if (!obj.IsEmpty())
-                        data.Add(obj);
+                    catch (Exception innerException)
+                    {
+                        LogError($"Exception occured in method {nameof(Parser)}.Parse<>() on type convert for property {sheet}.{prop.Name} with message: {innerException.Message}");
+                        throw innerException;
+                    }
                 }
-            }
-            catch (Exception outerException)
-            {
-                LogError($"Unhandled exception occured when parsing file with message: {outerException.Message}");
-                throw outerException;
+
+                if (!obj.IsEmpty())
+                    data.Add(obj);
             }
 
             return data;
@@ -89,20 +81,26 @@ namespace ExcelProcessor
         {
             ApplicationState.State = State.ValidatingWorkbook;
 
-            LogInfo("Workook is being validated...");            
+            LogInfo("Workook is being validated...");      
 
             using (ExcelPackage package = new ExcelPackage(FileManager.File))
-            {
+            {                
                 var mainConfiguredSheets = AppSettings.GetInstance().mainsheets;
+                var monthlyConfiguredSheet = AppSettings.GetInstance().monthlysheet;
+                var trackingConfiguredSheets = AppSettings.GetInstance().trackingsheets;
+
                 var worksheets = package.Workbook.Worksheets.Select(x => x.Name).ToArray();
 
                 if (mainConfiguredSheets.All(x => worksheets.Contains(x, StringComparer.OrdinalIgnoreCase)))
                     ApplicationState.HasRequiredSheets = true;
 
-                if (worksheets.Any(x => x.Contains("CPGReferenceMonthlyPlan", StringComparison.OrdinalIgnoreCase)))
+                if (monthlyConfiguredSheet.All(x => worksheets.Contains(x, StringComparer.OrdinalIgnoreCase)))
                     ApplicationState.HasMonthlyPlanSheet = true;
 
-                return ApplicationState.HasRequiredSheets || ApplicationState.HasMonthlyPlanSheet;
+                if (trackingConfiguredSheets.All(x => worksheets.Contains(x, StringComparer.OrdinalIgnoreCase)))
+                    ApplicationState.HasTrackingSheets = true;
+
+                return ApplicationState.HasRequiredSheets || ApplicationState.HasMonthlyPlanSheet || ApplicationState.HasTrackingSheets;
             }
         }
 

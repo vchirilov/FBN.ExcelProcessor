@@ -8,7 +8,8 @@ namespace ExcelProcessor.Config
     {
         public string connectionString { get; set; }
         public string[] mainsheets { get; set; }
-        public string[] additionalsheets { get; set; }
+        public string[] monthlysheet { get; set; }
+        public string[] trackingsheets { get; set; }
     }
 }
 

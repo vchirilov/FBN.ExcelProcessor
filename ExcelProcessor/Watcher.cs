@@ -66,6 +66,8 @@ namespace ExcelProcessor
             List<RetailerProductHierarchy> dsRetailerProductHierarchy = null;
             List<Cpgpl> dsCpgpl = null;
             List<CPGReferenceMonthlyPlan> dsCPGReferenceMonthlyPlan = null;
+            List<CPGPLResults> dsCPGPLResults = null;
+            List<RetailerPLResults> dsRetailerPLResults = null;
 
             //Validate authenticated user
             if (!ValidateAuthenticationUser())
@@ -116,6 +118,12 @@ namespace ExcelProcessor
 
                         if (worksheet.Key.Equals(nameof(CPGReferenceMonthlyPlan), StringComparison.OrdinalIgnoreCase))
                             dsCPGReferenceMonthlyPlan = Parser.Parse<CPGReferenceMonthlyPlan>(worksheet.Value);
+
+                        if (worksheet.Key.Equals(nameof(CPGPLResults), StringComparison.OrdinalIgnoreCase))
+                            dsCPGPLResults = Parser.Parse<CPGPLResults>(worksheet.Value);
+
+                        if (worksheet.Key.Equals(nameof(RetailerPLResults), StringComparison.OrdinalIgnoreCase))
+                            dsRetailerPLResults = Parser.Parse<RetailerPLResults>(worksheet.Value);
                     }
 
                     if (!ValidateHistoricalData(dsCpgpl, dsRetailerPL))
@@ -153,6 +161,12 @@ namespace ExcelProcessor
                     if (dsCPGReferenceMonthlyPlan != null)
                         dbFacade.Insert(dsCPGReferenceMonthlyPlan);
 
+                    if (dsCPGPLResults != null)
+                        dbFacade.Insert(dsCPGPLResults);
+
+                    if (dsRetailerPLResults != null)
+                        dbFacade.Insert(dsRetailerPLResults);                  
+
                     dbFacade.LoadFromStagingToCore (ApplicationState.HasRequiredSheets, ApplicationState.HasMonthlyPlanSheet);
 
                     stopWatch.Stop();
@@ -165,7 +179,7 @@ namespace ExcelProcessor
                 }
                 catch (Exception exc)
                 {
-                    LogError($"Exception has occured in method {nameof(Watcher)}.Run() with message {exc.Message}");
+                    LogError($"Exception occured in {nameof(Watcher)}.Run() with message {exc.Message}");
                     throw exc;
                 }
                 finally
@@ -209,7 +223,7 @@ namespace ExcelProcessor
 
             return true;
         }
-
+        
         private static bool ValidateAuthenticationUser()
         {
             string authUser = ApplicationState.FileName.Substring2("__", "__");
@@ -226,7 +240,11 @@ namespace ExcelProcessor
             }
         }
 
-        private static bool ValidateEANs (List<RetailerProductHierarchy> dsRetailerProductHierarchy, List<Cpgpl> dsCpgpl, List<CPGReferenceMonthlyPlan> dsCPGReferenceMonthlyPlan, DbFacade dbFacade)
+        private static bool ValidateEANs (
+            List<RetailerProductHierarchy> dsRetailerProductHierarchy, 
+            List<Cpgpl> dsCpgpl, 
+            List<CPGReferenceMonthlyPlan> dsCPGReferenceMonthlyPlan, 
+            DbFacade dbFacade)
         {
             ApplicationState.State = State.ValidatingEANs;
 

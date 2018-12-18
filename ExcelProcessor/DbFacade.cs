@@ -27,8 +27,10 @@ namespace ExcelProcessor
 
         public void Insert<T>(List<T> items) where T : new()
         {
-            ApplicationState.State = State.Loading;            
-            
+            ApplicationState.State = State.Loading;
+
+            LogInfo($"{typeof(T).Name} is loading to database...");
+
             var chunks = GetChunks(items, BATCH);
 
             //Build column list in INSERT statement
@@ -82,9 +84,7 @@ namespace ExcelProcessor
                         }
                     }
                 }
-            }
-
-            LogInfo($"{typeof(T).Name} loaded.");
+            }            
         }
 
         public List<T> GetAll<T>()
@@ -107,6 +107,7 @@ namespace ExcelProcessor
         public static void LogRecord(string stage, string status, string message)
         {
             DbFacade db = new DbFacade();
+            message = MySqlHelper.EscapeString(message);            
             db.ExecuteNonQuery($"INSERT INTO fbn_logs.logs (`UserId`,`FileName`,`Stage`,`Status`,`Message`) VALUES ('{ApplicationState.UserId}','{ApplicationState.FileName}','{stage}','{status}','{message}');");
         }
 
@@ -120,13 +121,13 @@ namespace ExcelProcessor
         }
 
         private void ExecuteNonQuery(string sqlStatement, string message = "SQL execution has failed")
-        {
+        {            
             using (sqlConnection)
             {
                 sqlConnection.Open();
                 var sqlTransaction = sqlConnection.BeginTransaction();
 
-                using (MySqlCommand sqlCommand = new MySqlCommand(sqlStatement.ToString(), sqlConnection, sqlTransaction))
+                using (MySqlCommand sqlCommand = new MySqlCommand(sqlStatement, sqlConnection, sqlTransaction))
                 {
                     try
                     {

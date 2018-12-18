@@ -1,5 +1,6 @@
 {
   "connectionString": "server=localhost;port=3306;database=fbn_staging;user=root;password=spartak_1;default command timeout=600;",
   "mainsheets": [ "ProductAttributes", "MarketOverview", "CpgProductHierarchy", "SellOutData", "RetailerPL", "RetailerProductHierarchy", "CPGPL" ],
-  "additionalsheets": ["CPGReferenceMonthlyPlan"]
+  "monthlysheet": [ "CPGReferenceMonthlyPlan"],
+  "trackingsheets": [ "CPGPLResults", "RetailerPLResults" ]
 }

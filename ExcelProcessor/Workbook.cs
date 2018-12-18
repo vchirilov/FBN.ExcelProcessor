@@ -41,7 +41,16 @@ namespace ExcelProcessor
 
             if (ApplicationState.HasMonthlyPlanSheet)
             {
-                foreach (var sheet in AppSettings.GetInstance().additionalsheets)
+                foreach (var sheet in AppSettings.GetInstance().monthlysheet)
+                {
+                    LogInfo($"Initializing page {sheet}...");
+                    Worksheets.Add(sheet, package.Workbook.Worksheets[sheet]);
+                }
+            }
+
+            if (ApplicationState.HasTrackingSheets)
+            {
+                foreach (var sheet in AppSettings.GetInstance().trackingsheets)
                 {
                     LogInfo($"Initializing page {sheet}...");
                     Worksheets.Add(sheet, package.Workbook.Worksheets[sheet]);
