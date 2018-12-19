@@ -111,11 +111,11 @@ namespace ExcelProcessor
             db.ExecuteNonQuery($"INSERT INTO fbn_logs.logs (`UserId`,`FileName`,`Stage`,`Status`,`Message`) VALUES ('{ApplicationState.UserId}','{ApplicationState.FileName}','{stage}','{status}','{message}');");
         }
 
-        public void LoadFromStagingToCore(bool includeRequired, bool includeMonthlyPlan)
+        public void LoadFromStagingToCore(bool includeRequired, bool includeMonthlyPlan, bool includeTracking)
         {
             LogInfo("Importing data from staging database to core. Please wait...");
 
-            ExecuteNonQuery($"CALL fbn_core.import_data_extended('{includeRequired.ToString()}','{includeMonthlyPlan.ToString()}')", "Import data from staging to core has failed");
+            ExecuteNonQuery($"CALL fbn_core.import_data_extended('{includeRequired.ToString()}','{includeMonthlyPlan.ToString()}','{includeTracking.ToString()}')", "Import data from staging to core has failed");
 
             LogInfo("Importing data from staging database to core finished succesfully.");
         }

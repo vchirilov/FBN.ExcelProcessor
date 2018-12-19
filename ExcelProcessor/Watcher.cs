@@ -167,7 +167,7 @@ namespace ExcelProcessor
                     if (dsRetailerPLResults != null)
                         dbFacade.Insert(dsRetailerPLResults);                  
 
-                    dbFacade.LoadFromStagingToCore (ApplicationState.HasRequiredSheets, ApplicationState.HasMonthlyPlanSheet);
+                    dbFacade.LoadFromStagingToCore (ApplicationState.HasRequiredSheets, ApplicationState.HasMonthlyPlanSheet, ApplicationState.HasTrackingSheets);
 
                     stopWatch.Stop();
                     TimeSpan ts = stopWatch.Elapsed;
