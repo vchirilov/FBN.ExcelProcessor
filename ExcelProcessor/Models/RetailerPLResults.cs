@@ -14,28 +14,24 @@ namespace ExcelProcessor.Models
         [Order(5)] public string Banner { get; set; }
         [Order(6)] public string Country { get; set; }
         [Order(7)] public string EAN { get; set; }
-        [Order(8)] public string EANDescription { get; set; }
-        [Order(9)] public decimal SellOutVolumeTotal { get; set; }
-        [Order(10)] public decimal SellOutVolumePromo { get; set; }
-        [Order(11)] public decimal SellOutVolumeNonPromo { get; set; }
-        [Order(12)] public decimal ListPricePerUnit { get; set; }
-        [Order(13)] public decimal TTSTotal { get; set; }
-        [Order(14)] public decimal CPPTotal { get; set; }
-        [Order(15)] public decimal SellOutPriceAverage { get; set; }
-        [Order(16)] public decimal SellOutPricePromo { get; set; }
-        [Order(17)] public decimal SellOutPriceNonPromo { get; set; }
-        [Order(18)] public decimal COGSTotal { get; set; }
-        [Order(19)] public decimal COGSPromo { get; set; }
-        [Order(20)] public decimal COGSNonPromo { get; set; }
-        [Order(21)] public decimal RetailerProfitL1Total { get; set; }
-        [Order(22)] public decimal RetailerProfitL1Promo { get; set; }
-        [Order(23)] public decimal RetailerProfitL1NonPromo { get; set; }
-        [Order(24)] public decimal RetailerCODBTotal { get; set; }
-        [Order(25)] public decimal RetailerProfitL2Total { get; set; }
-        [Order(26)] public decimal RetailerOverheadTotal { get; set; }
-        [Order(27)] public decimal RetailerProfitL3Total { get; set; }
-        [Order(28)] public decimal GrossProfit { get; set; }
-        [Order(29)] public decimal Revenue { get; set; }
+        [Order(8)] public decimal SellOutVolumeTotal { get; set; }
+        [Order(9)] public decimal SellOutVolumePromo { get; set; }
+        [Order(10)] public decimal SellOutVolumeNonPromo { get; set; }
+        [Order(11)] public decimal SellOutPriceAverage { get; set; }
+        [Order(12)] public decimal SellOutPricePromo { get; set; }
+        [Order(13)] public decimal SellOutPriceNonPromo { get; set; }
+        [Order(14)] public decimal COGSTotal { get; set; }
+        [Order(15)] public decimal COGSPromo { get; set; }
+        [Order(16)] public decimal COGSNonPromo { get; set; }
+        [Order(17)] public decimal RetailerProfitL1Total { get; set; }
+        [Order(18)] public decimal RetailerProfitL1Promo { get; set; }
+        [Order(19)] public decimal RetailerProfitL1NonPromo { get; set; }
+        [Order(20)] public decimal RetailerCODBTotal { get; set; }
+        [Order(21)] public decimal RetailerProfitL2Total { get; set; }
+        [Order(22)] public decimal RetailerOverheadTotal { get; set; }
+        [Order(23)] public decimal RetailerProfitL3Total { get; set; }
+        [Order(24)] public decimal GrossProfit { get; set; }
+        [Order(25)] public decimal Revenue { get; set; }
 
         public bool IsEmpty()
         {
@@ -46,13 +42,9 @@ namespace ExcelProcessor.Models
                 && Banner == null
                 && Country == null
                 && EAN == null
-                && EANDescription == null
                 && SellOutVolumeTotal == 0m
                 && SellOutVolumePromo == 0m
                 && SellOutVolumeNonPromo == 0m
-                && ListPricePerUnit == 0m
-                && TTSTotal == 0m
-                && CPPTotal == 0m
                 && SellOutPriceAverage == 0m
                 && SellOutPricePromo == 0m
                 && SellOutPriceNonPromo == 0m

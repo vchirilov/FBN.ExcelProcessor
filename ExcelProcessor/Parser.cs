@@ -103,10 +103,10 @@ namespace ExcelProcessor
                 return ApplicationState.HasRequiredSheets || ApplicationState.HasMonthlyPlanSheet || ApplicationState.HasTrackingSheets;
             }
         }
-
-        public static bool IsPageValid<T>(ExcelWorksheet worksheet)
+                
+        public static bool IsPageValid(Type type, ExcelWorksheet worksheet)
         {
-            var sheet = typeof(T).Name;
+            var sheet = type.Name;
             var response = true;
 
             try
@@ -126,22 +126,21 @@ namespace ExcelProcessor
                         columnName = columnName.TrimEnd("(%)".ToArray());
                     }
 
-                    string propName = AttributeHelper.GetPropertyByKey<T>(col).Name;
+                    string modelProperty = AttributeHelper.GetPropertyByKey(type,col).Name;
 
-                    if (!string.Equals(columnName.ReplaceSpace(), propName, StringComparison.OrdinalIgnoreCase))
+                    if (!string.Equals(columnName.ReplaceSpace(), modelProperty, StringComparison.OrdinalIgnoreCase))
                     {
-                        LogInfo($"Column {propName} is expected but {columnName} found in sheet {sheet}.");
+                        LogError($"Column {modelProperty} is expected but {columnName} found in sheet {sheet}.");
                         response = false;
                         break;
                     }
-                    col++;
                 }
             }
             catch (Exception exc)
             {
                 LogError($"Unhandled exception occured in IsPageValid() method with message: {exc.Message}");
                 return false;
-            }           
+            }
 
             return response;
         }

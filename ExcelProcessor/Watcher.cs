@@ -189,41 +189,30 @@ namespace ExcelProcessor
                 }
             }                
         }
-
+        
         private static bool ValidateAllPages(Workbook workbook)
         {
             ApplicationState.State = State.InitializingWorksheet;
 
-            foreach (var worksheet in workbook.Worksheets)
+            var iModel = typeof(IModel);
+            var modelTypes = AppDomain.CurrentDomain.GetAssemblies()
+                .SelectMany(s => s.GetTypes())
+                .Where(p => iModel.IsAssignableFrom(p));
+
+            var query =
+                from type in modelTypes
+                join worksheet in workbook.Worksheets on type.Name.ToLower() equals worksheet.Key.ToLower()
+                select new { type, worksheet };
+
+            foreach (var item in query)
             {
-                if (worksheet.Key.Equals(nameof(ProductAttributes), StringComparison.OrdinalIgnoreCase) && !Parser.IsPageValid<ProductAttributes>(worksheet.Value))
-                    return false;
-
-                if (worksheet.Key.Equals(nameof(MarketOverview), StringComparison.OrdinalIgnoreCase) && !Parser.IsPageValid<MarketOverview>(worksheet.Value))
-                    return false;
-
-                if (worksheet.Key.Equals(nameof(CpgProductHierarchy), StringComparison.OrdinalIgnoreCase) && !Parser.IsPageValid<CpgProductHierarchy>(worksheet.Value))
-                    return false;
-
-                if (worksheet.Key.Equals(nameof(SellOutData), StringComparison.OrdinalIgnoreCase) && !Parser.IsPageValid<SellOutData>(worksheet.Value))
-                    return false;
-
-                if (worksheet.Key.Equals(nameof(RetailerPL), StringComparison.OrdinalIgnoreCase) && !Parser.IsPageValid<RetailerPL>(worksheet.Value))
-                    return false;
-
-                if (worksheet.Key.Equals(nameof(RetailerProductHierarchy), StringComparison.OrdinalIgnoreCase) && !Parser.IsPageValid<RetailerProductHierarchy>(worksheet.Value))
-                    return false;
-
-                if (worksheet.Key.Equals(nameof(Cpgpl), StringComparison.OrdinalIgnoreCase) && !Parser.IsPageValid<Cpgpl>(worksheet.Value))
-                    return false;
-
-                if (worksheet.Key.Equals(nameof(CPGReferenceMonthlyPlan), StringComparison.OrdinalIgnoreCase) && !Parser.IsPageValid<CPGReferenceMonthlyPlan>(worksheet.Value))
-                    return false;
+                if (!Parser.IsPageValid(item.type,item.worksheet.Value))
+                    return false;                
             }
 
             return true;
         }
-        
+
         private static bool ValidateAuthenticationUser()
         {
             string authUser = ApplicationState.FileName.Substring2("__", "__");
