@@ -28,7 +28,7 @@ namespace ExcelProcessor
         {
             ApplicationState.State = State.InitializingWorksheet;
 
-            package = new ExcelPackage(FileManager.File);
+            package = new ExcelPackage(ApplicationState.File);
 
             if (ApplicationState.HasRequiredSheets)
             {

@@ -108,7 +108,7 @@ namespace ExcelProcessor
         {
             DbFacade db = new DbFacade();
             message = MySqlHelper.EscapeString(message);            
-            db.ExecuteNonQuery($"INSERT INTO fbn_logs.logs (`UserId`,`FileName`,`Stage`,`Status`,`Message`) VALUES ('{ApplicationState.UserId}','{ApplicationState.FileName}','{stage}','{status}','{message}');");
+            db.ExecuteNonQuery($"INSERT INTO fbn_logs.logs (`UserId`,`FileName`,`Stage`,`Status`,`Message`) VALUES ('{ApplicationState.UserId}','{ApplicationState.File}','{stage}','{status}','{message}');");
         }
 
         public void LoadFromStagingToCore(bool includeRequired, bool includeMonthlyPlan, bool includeTracking)

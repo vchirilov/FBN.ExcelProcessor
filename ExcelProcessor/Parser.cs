@@ -81,7 +81,9 @@ namespace ExcelProcessor
         {
             ApplicationState.State = State.ValidatingWorkbook;
 
-            LogInfo("Workook is being validated...");      
+            LogInfo("Workook is being validated...");
+
+            var file = ApplicationState.File;
 
             using (ExcelPackage package = new ExcelPackage(FileManager.File))
             {                

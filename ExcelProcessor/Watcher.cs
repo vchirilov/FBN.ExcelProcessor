@@ -46,8 +46,12 @@ namespace ExcelProcessor
                     LogError($"Global Exception: {exc.Message}");
             }
             finally
-            {
-                FileManager.DeleteFile();
+            {                
+                ApplicationState.Reset();
+
+                LogInfo($"The number of database connections {DbFacade.Connections}");
+
+                FileManager.DeleteFile();                
             }            
         }
 
@@ -87,6 +91,7 @@ namespace ExcelProcessor
                     Stopwatch stopWatch = new Stopwatch();
                     stopWatch.Start();
 
+                    //Validate Worksheets
                     if (!ValidateAllPages(workbook))
                     {
                         LogInfo("Sheets validation has failed.");
@@ -182,11 +187,6 @@ namespace ExcelProcessor
                     LogError($"Exception occured in {nameof(Watcher)}.Run() with message {exc.Message}");
                     throw exc;
                 }
-                finally
-                {
-                    LogInfo($"The number of database connections {DbFacade.Connections}");
-                    ApplicationState.Reset();
-                }
             }                
         }
         
@@ -194,13 +194,14 @@ namespace ExcelProcessor
         {
             ApplicationState.State = State.InitializingWorksheet;
 
-            var iModel = typeof(IModel);
-            var modelTypes = AppDomain.CurrentDomain.GetAssemblies()
+            var model = typeof(IModel);
+
+            var models = AppDomain.CurrentDomain.GetAssemblies()
                 .SelectMany(s => s.GetTypes())
-                .Where(p => iModel.IsAssignableFrom(p));
+                .Where(p => model.IsAssignableFrom(p));
 
             var query =
-                from type in modelTypes
+                from type in models
                 join worksheet in workbook.Worksheets on type.Name.ToLower() equals worksheet.Key.ToLower()
                 select new { type, worksheet };
 
@@ -215,7 +216,7 @@ namespace ExcelProcessor
 
         private static bool ValidateAuthenticationUser()
         {
-            string authUser = ApplicationState.FileName.Substring2("__", "__");
+            string authUser = ApplicationState.File.Name.Substring2("__", "__");
 
             if (authUser.IsNullOrEmpty())
             {
@@ -230,7 +231,7 @@ namespace ExcelProcessor
         }
 
         private static bool ValidateEANs (
-            List<RetailerProductHierarchy> dsRetailerProductHierarchy, 
+            List<RetailerProductHierarchy> dsRetailerProductHierarchy,
             List<Cpgpl> dsCpgpl, 
             List<CPGReferenceMonthlyPlan> dsCPGReferenceMonthlyPlan, 
             DbFacade dbFacade)
@@ -400,7 +401,7 @@ namespace ExcelProcessor
                 {
                     using (ExcelPackage package = new ExcelPackage(FileManager.File))
                     {
-                        ApplicationState.FileName = FileManager.File.Name;
+                        ApplicationState.File = FileManager.File;
                         LogInfo($"File [{arg.Name}] has been created.");
                     }
 
