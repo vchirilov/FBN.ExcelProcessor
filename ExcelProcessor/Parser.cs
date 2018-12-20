@@ -83,27 +83,35 @@ namespace ExcelProcessor
 
             LogInfo("Workook is being validated...");
 
-            var file = ApplicationState.File;
+            try
+            {
+                using (ExcelPackage package = new ExcelPackage(ApplicationState.File))
+                {
+                    var mainConfiguredSheets = AppSettings.GetInstance().mainsheets;
+                    var monthlyConfiguredSheet = AppSettings.GetInstance().monthlysheet;
+                    var trackingConfiguredSheets = AppSettings.GetInstance().trackingsheets;
 
-            using (ExcelPackage package = new ExcelPackage(FileManager.File))
-            {                
-                var mainConfiguredSheets = AppSettings.GetInstance().mainsheets;
-                var monthlyConfiguredSheet = AppSettings.GetInstance().monthlysheet;
-                var trackingConfiguredSheets = AppSettings.GetInstance().trackingsheets;
+                    var worksheets = package.Workbook.Worksheets.Select(x => x.Name).ToArray();
 
-                var worksheets = package.Workbook.Worksheets.Select(x => x.Name).ToArray();
+                    if (mainConfiguredSheets.All(x => worksheets.Contains(x, StringComparer.OrdinalIgnoreCase)))
+                        ApplicationState.HasRequiredSheets = true;
 
-                if (mainConfiguredSheets.All(x => worksheets.Contains(x, StringComparer.OrdinalIgnoreCase)))
-                    ApplicationState.HasRequiredSheets = true;
+                    if (monthlyConfiguredSheet.All(x => worksheets.Contains(x, StringComparer.OrdinalIgnoreCase)))
+                        ApplicationState.HasMonthlyPlanSheet = true;
 
-                if (monthlyConfiguredSheet.All(x => worksheets.Contains(x, StringComparer.OrdinalIgnoreCase)))
-                    ApplicationState.HasMonthlyPlanSheet = true;
+                    if (trackingConfiguredSheets.All(x => worksheets.Contains(x, StringComparer.OrdinalIgnoreCase)))
+                        ApplicationState.HasTrackingSheets = true;
 
-                if (trackingConfiguredSheets.All(x => worksheets.Contains(x, StringComparer.OrdinalIgnoreCase)))
-                    ApplicationState.HasTrackingSheets = true;
-
-                return ApplicationState.HasRequiredSheets || ApplicationState.HasMonthlyPlanSheet || ApplicationState.HasTrackingSheets;
+                    return ApplicationState.HasRequiredSheets || ApplicationState.HasMonthlyPlanSheet || ApplicationState.HasTrackingSheets;
+                }
             }
+            catch (Exception exc)
+            {
+                LogError($"Exception occured in {nameof(Parser)}.IsWorkbookValid() with message {exc.Message}");
+            }
+
+            return false;
+            
         }
                 
         public static bool IsPageValid(Type type, ExcelWorksheet worksheet)

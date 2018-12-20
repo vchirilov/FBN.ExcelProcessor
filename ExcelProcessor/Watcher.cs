@@ -79,10 +79,7 @@ namespace ExcelProcessor
 
             //Validate Workbook
             if (!Parser.IsWorkbookValid())
-            {
-                LogError("Workbook has failed validation.");
                 return;
-            }
 
             using (var workbook = new Workbook())
             {
