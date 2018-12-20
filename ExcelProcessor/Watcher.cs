@@ -403,9 +403,8 @@ namespace ExcelProcessor
                     }
 
                     break;
-                }               
-
-                catch (IOException)
+                }
+                catch (Exception)
                 {
                     Thread.Sleep(500);
                     LogInfo("File copy in process...");
