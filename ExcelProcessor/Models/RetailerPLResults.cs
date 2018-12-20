@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ExcelProcessor.Helpers;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -36,12 +37,12 @@ namespace ExcelProcessor.Models
         public bool IsEmpty()
         {
             if (Year == 0
-                && YearType == null
+                && YearType.IsNullOrEmpty() == true
                 && Month == 0
-                && Retailer == null
-                && Banner == null
-                && Country == null
-                && EAN == null
+                && Retailer.IsNullOrEmpty() == true
+                && Banner.IsNullOrEmpty() == true
+                && Country.IsNullOrEmpty() == true
+                && EAN.IsNullOrEmpty() == true
                 && SellOutVolumeTotal == 0m
                 && SellOutVolumePromo == 0m
                 && SellOutVolumeNonPromo == 0m

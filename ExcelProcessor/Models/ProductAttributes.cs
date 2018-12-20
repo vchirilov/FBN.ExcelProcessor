@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ExcelProcessor.Helpers;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -38,20 +39,20 @@ namespace ExcelProcessor.Models
 
         public bool IsEmpty()
         {
-            if (Type == null 
-                && EAN == null 
-                && Brand == null 
+            if (Type.IsNullOrEmpty() == true
+                && EAN.IsNullOrEmpty() == true
+                && Brand.IsNullOrEmpty() == true
                 && PackSize == 0m
-                && PackSizeUnit == null 
-                && MultiPack == null 
+                && PackSizeUnit.IsNullOrEmpty() == true
+                && MultiPack.IsNullOrEmpty() == true
                 && UnitsPerPack == 0
-                && PackageType == null
-                && Form == null
-                && TargetUser == null 
-                && TargetArea == null
-                && Variant == null
-                && NielsenCategory == null 
-                && Priority == null)
+                && PackageType.IsNullOrEmpty() == true
+                && Form.IsNullOrEmpty() == true
+                && TargetUser.IsNullOrEmpty() == true
+                && TargetArea.IsNullOrEmpty() == true
+                && Variant.IsNullOrEmpty() == true
+                && NielsenCategory.IsNullOrEmpty() == true
+                && Priority.IsNullOrEmpty() == true)
                 return true;
             else
                 return false;

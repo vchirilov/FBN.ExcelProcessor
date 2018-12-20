@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ExcelProcessor.Helpers;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -44,33 +45,33 @@ namespace ExcelProcessor.Models
         public bool IsEmpty()
         {
             if (Year == 0 &&
-                YearType == null &&
-                CPG == null &&
-                Retailer == null &&
-                Banner == null &&
-                Country == null &&
-                CategoryGroup == null &&
-                Category == null &&
-                Market == null &&
-                MarketDesc == null &&
-                Brand == null &&
-                Segment == null &&
-                TargetUser == null &&
-                MPvsNonMP == null &&
-                Item == null &&
-                GlobalBrand == null &&
+                YearType.IsNullOrEmpty() == true &&
+                CPG.IsNullOrEmpty() == true &&
+                Retailer.IsNullOrEmpty() == true &&
+                Banner.IsNullOrEmpty() == true &&
+                Country.IsNullOrEmpty() == true &&
+                CategoryGroup.IsNullOrEmpty() == true &&
+                Category.IsNullOrEmpty() == true &&
+                Market.IsNullOrEmpty() == true &&
+                MarketDesc.IsNullOrEmpty() == true &&
+                Brand.IsNullOrEmpty() == true &&
+                Segment.IsNullOrEmpty() == true &&
+                TargetUser.IsNullOrEmpty() == true &&
+                MPvsNonMP.IsNullOrEmpty() == true &&
+                Item.IsNullOrEmpty() == true &&
+                GlobalBrand.IsNullOrEmpty() == true &&
                 ActualNumberInPack == 0m &&
-                Format == null &&
-                Type == null &&
-                Form == null &&
-                PackType == null &&
+                Format.IsNullOrEmpty() == true &&
+                Type.IsNullOrEmpty() == true &&
+                Form.IsNullOrEmpty() == true &&
+                PackType.IsNullOrEmpty() == true &&
                 ActualPackSize == 0m &&
-                CoreBenefit == null &&
-                Variant == null &&
-                TargetArea == null &&
-                SubSegment == null &&
-                SubBrand == null &&
-                EAN == null &&
+                CoreBenefit.IsNullOrEmpty() == true &&
+                Variant.IsNullOrEmpty() == true &&
+                TargetArea.IsNullOrEmpty() == true &&
+                SubSegment.IsNullOrEmpty() == true &&
+                SubBrand.IsNullOrEmpty() == true &&
+                EAN.IsNullOrEmpty() == true &&
                 TotalSalesVolume == 0m &&
                 TotalSalesValue == 0m &&
                 PromoSalesVolume == 0m &&

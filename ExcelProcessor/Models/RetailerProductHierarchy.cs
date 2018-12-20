@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ExcelProcessor.Helpers;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -26,22 +27,22 @@ namespace ExcelProcessor.Models
 
         public bool IsEmpty()
         {
-            if (Retailer == null &&
-                Banner == null &&
-                Country == null &&
-                EAN == null &&
-                CategoryGroup == null &&
-                SubDivision == null &&
-                Category == null &&
-                Market == null &&
-                Sector == null &&
-                SubSector == null &&
-                Segment == null &&
-                ProductForm == null &&
-                CPG == null &&
-                BrandForm == null &&
-                SizePackForm == null &&
-                SizePackFormVariant == null)
+            if (Retailer.IsNullOrEmpty() == true &&
+                Banner.IsNullOrEmpty() == true &&
+                Country.IsNullOrEmpty() == true &&
+                EAN.IsNullOrEmpty() == true &&
+                CategoryGroup.IsNullOrEmpty() == true &&
+                SubDivision.IsNullOrEmpty() == true &&
+                Category.IsNullOrEmpty() == true &&
+                Market.IsNullOrEmpty() == true &&
+                Sector.IsNullOrEmpty() == true &&
+                SubSector.IsNullOrEmpty() == true &&
+                Segment.IsNullOrEmpty() == true &&
+                ProductForm.IsNullOrEmpty() == true &&
+                CPG.IsNullOrEmpty() == true &&
+                BrandForm.IsNullOrEmpty() == true &&
+                SizePackForm.IsNullOrEmpty() == true &&
+                SizePackFormVariant.IsNullOrEmpty() == true)
                 return true;
             else
                 return false;

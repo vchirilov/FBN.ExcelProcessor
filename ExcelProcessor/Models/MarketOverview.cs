@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ExcelProcessor.Helpers;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -39,17 +40,17 @@ namespace ExcelProcessor.Models
         public bool IsEmpty()
         {
             if (Year == 0
-                && YearType == null
-                && CPG == null
-                && Retailer == null
-                && Banner == null
-                && Country == null
-                && CategoryGroup == null
-                && NielsenCategory == null
-                && Market == null
-                && MarketDesc == null
-                && Segment == null
-                && SubSegment == null
+                && YearType.IsNullOrEmpty() == true
+                && CPG.IsNullOrEmpty() == true
+                && Retailer.IsNullOrEmpty() == true
+                && Banner.IsNullOrEmpty() == true
+                && Country.IsNullOrEmpty() == true
+                && CategoryGroup.IsNullOrEmpty() == true
+                && NielsenCategory.IsNullOrEmpty() == true
+                && Market.IsNullOrEmpty() == true
+                && MarketDesc.IsNullOrEmpty() == true
+                && Segment.IsNullOrEmpty() == true
+                && SubSegment.IsNullOrEmpty() == true
                 && SalesVolume == 0m
                 && SalesValue == 0m)
                 return true;
