@@ -74,11 +74,14 @@ namespace ExcelProcessor.Helpers
                 DbFacade.LogRecord(ApplicationState.State.ToString(), "Error", txt);            
         }
 
-        public static void LogWarning(string txt)
+        public static void LogWarning(string txt, bool save = true)
         {
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine($"Warning: {txt}");
             Console.ForegroundColor = ConsoleColor.White;
+
+            if (save)
+                DbFacade.LogRecord(ApplicationState.State.ToString(), "Warning", txt);
         }
 
 

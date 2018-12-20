@@ -131,13 +131,13 @@ namespace ExcelProcessor
                     if (!ValidateHistoricalData(dsCpgpl, dsRetailerPL))
                         return;
 
-                    if (!ValidateUniques(dsCpgpl, dsCpgProductHierarchy, dsCPGReferenceMonthlyPlan, dsMarketOverview, dsProductAttributes, dsRetailerPL, dsRetailerProductHierarchy, dsSellOutData))
+                    if (!ValidateUniques(dsCpgpl, dsCpgProductHierarchy, dsCPGReferenceMonthlyPlan, dsMarketOverview, dsProductAttributes, dsRetailerPL, dsRetailerProductHierarchy, dsSellOutData, dsCPGPLResults, dsRetailerPLResults))
                         return;
 
                     DbFacade dbFacade = new DbFacade();
 
                     if (!ValidateEANs(dsRetailerProductHierarchy, dsCpgpl, dsCPGReferenceMonthlyPlan, dbFacade))
-                        return;                                  
+                        return;
 
                     if (dsProductAttributes != null)
                         dbFacade.Insert(dsProductAttributes);
@@ -282,7 +282,9 @@ namespace ExcelProcessor
             List<ProductAttributes> dsProductAttributes,
             List<RetailerPL> dsRetailerPL,
             List<RetailerProductHierarchy> dsRetailerProductHierarchy,
-            List<SellOutData> dsSellOutData)
+            List<SellOutData> dsSellOutData,
+            List<CPGPLResults> dsCPGPLResults,
+            List<RetailerPLResults> dsRetailerPLResults)
         {
             ApplicationState.State = State.ValidatingUniqueValues;
 
@@ -358,6 +360,27 @@ namespace ExcelProcessor
                     return false;
                 }
             }
+
+            if (ApplicationState.HasTrackingSheets)
+            {
+                var items9 = dsCPGPLResults.Select(x => new { x.Year, x.YearType, x.Month, x.Retailer, x.Banner, x.Country, x.EAN }).Distinct();
+
+                if (items9.Count() != dsCPGPLResults.Count())
+                {
+                    LogError($"Year, YearType, Month, Retailer, Banner, Country, EAN have duplicates in {nameof(CPGPLResults)}");
+                    return false;
+                }
+
+                var items10 = dsRetailerPLResults.Select(x => new { x.Year, x.YearType, x.Month, x.Retailer, x.Banner, x.Country, x.EAN }).Distinct();
+
+                if (items9.Count() != dsRetailerPLResults.Count())
+                {
+                    LogError($"Year, YearType, Month, Retailer, Banner, Country, EAN have duplicates in {nameof(RetailerPLResults)}");
+                    return false;
+                }
+            }
+
+
             return true;
         }
 
@@ -388,7 +411,7 @@ namespace ExcelProcessor
 
         private static void WaitForFile(FileSystemEventArgs arg)
         {            
-            var attempts = 0;
+            var attempts = 1;
 
             ApplicationState.State = State.CopyingFile;
 
@@ -406,9 +429,16 @@ namespace ExcelProcessor
                 }
                 catch (Exception)
                 {
-                    Thread.Sleep(500);
-                    LogInfo("File copy in process...");
-                    if (++attempts >= 20) break;
+                    Thread.Sleep(1000);
+
+                    LogWarning("File copy in progress...");
+
+                    if (++attempts >= 20)
+                    {
+                        string message = $"File cannot be copied. The number of {attempts} attempts is over. The file is too big or internet connection is slow.";
+                        LogError($"Exception occured in {nameof(Watcher)}.WaitForFile() with message {message}");
+                        throw new Exception(message);
+                    }
                 }
             }
         }
