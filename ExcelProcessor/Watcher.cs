@@ -386,25 +386,28 @@ namespace ExcelProcessor
 
         private static bool ValidateHistoricalData(List<Cpgpl> dsCpgpl, List<RetailerPL> dsRetailerPL )
         {
-            ApplicationState.State = State.ValidatingHistoricalData;
-
-            LogInfo($"Validate Historical Data");
-
-            int currYear = DateTime.Now.Year;
-            int year1 = dsCpgpl.Select(x => x.Year).Min();
-            int year2 = dsCpgpl.Select(x => x.Year).Min();
-
-            if (currYear == year1)
+            if (ApplicationState.HasRequiredSheets)
             {
-                LogError($"{nameof(Cpgpl)} has no historical data");
-                return false;
+                ApplicationState.State = State.ValidatingHistoricalData;
+
+                LogInfo($"Validate Historical Data");
+
+                int currYear = DateTime.Now.Year;
+                int year1 = dsCpgpl.Select(x => x.Year).Min();
+                int year2 = dsCpgpl.Select(x => x.Year).Min();
+
+                if (currYear == year1)
+                {
+                    LogError($"{nameof(Cpgpl)} has no historical data");
+                    return false;
+                }
+
+                if (currYear == year2)
+                {
+                    LogError($"{nameof(RetailerPL)} has no historical data");
+                    return false;
+                }
             }
-
-            if (currYear == year2)
-            {
-                LogError($"{nameof(RetailerPL)} has no historical data");
-                return false;
-            }           
 
             return true;
         }
