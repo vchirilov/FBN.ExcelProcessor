@@ -93,7 +93,7 @@ namespace ExcelProcessor
             {
                 sqlConnection.Open();
 
-                var sql = $"SELECT * FROM fbn_staging.{GetDbTable<T>()}";
+                var sql = $"SELECT * FROM {GetDbTable<T>()}";
 
                 return sqlConnection.Query<T>(sql).ToList();
             }
@@ -108,14 +108,14 @@ namespace ExcelProcessor
         {
             DbFacade db = new DbFacade();
             message = MySqlHelper.EscapeString(message);            
-            db.ExecuteNonQuery($"INSERT INTO fbn_logs.logs (`UserId`,`FileName`,`Stage`,`Status`,`Message`) VALUES ('{ApplicationState.UserId}','{ApplicationState.File}','{stage}','{status}','{message}');");
+            db.ExecuteNonQuery($"INSERT INTO fbn_logs.logs (`UserId`,`FileName`,`Stage`,`Status`,`Message`) VALUES ('{ApplicationState.ImportDetails?.User}','{ApplicationState.File?.Name}','{stage}','{status}','{message}');");
         }
 
         public void LoadFromStagingToCore(bool includeRequired, bool includeMonthlyPlan, bool includeTracking)
         {
             LogInfo("Importing data from staging database to core. Please wait...");
 
-            ExecuteNonQuery($"CALL fbn_core.import_data_extended('{includeRequired.ToString()}','{includeMonthlyPlan.ToString()}','{includeTracking.ToString()}')", "Import data from staging to core has failed");
+            ExecuteNonQuery($"CALL fbn_core.import_data_extended('{includeRequired.ToString()}','{includeMonthlyPlan.ToString()}','{includeTracking.ToString()}',{ApplicationState.ImportDetails.Year}, {ApplicationState.ImportDetails.Month})", "Import data from staging to core has failed");
 
             LogInfo("Importing data from staging database to core finished succesfully.");
         }

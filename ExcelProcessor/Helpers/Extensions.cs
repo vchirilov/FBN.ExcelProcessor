@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -17,7 +18,7 @@ namespace ExcelProcessor.Helpers
             return str.Replace(" ", string.Empty);
         }
 
-        public static string Substring2(this string source, string left, string right)
+        public static string GetStringBetween(this string source, string left, string right)
         {
             return Regex.Match(source,string.Format("{0}(.*){1}", left, right)).Groups[1].Value;
         }
@@ -25,6 +26,11 @@ namespace ExcelProcessor.Helpers
         public static bool IsNullOrEmpty(this string source)
         {
             return string.IsNullOrEmpty(source);
+        }
+
+        public static string GetFileNameWithoutExtension(this string source)
+        {
+            return Path.GetFileNameWithoutExtension(source);
         }
     }
 }

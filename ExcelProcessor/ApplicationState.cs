@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ExcelProcessor.Models;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -8,22 +9,26 @@ namespace ExcelProcessor
 {
     public static class ApplicationState
     {
-        public static bool HasRequiredSheets { get; set; } = false;
-        public static bool HasMonthlyPlanSheet { get; set; } = false;
-        public static bool HasTrackingSheets { get; set; } = false;
+        public static class ImportType
+        {
+            public static bool IsBase { get; set; } = false;
+            public static bool IsMonthly { get; set; } = false;
+            public static bool IsTracking { get; set; } = false;
+        }
+
         public static FileInfo File { get; set; } = null;
-        public static string UserId { get; set; } = string.Empty;
+        public static ImportDetails ImportDetails { get; set;} = null;
         public static State State { get; set; } = State.None;
         public static void Reset()
         {
-            HasRequiredSheets = false;
-            HasMonthlyPlanSheet = false;
-            HasTrackingSheets = false;
-            File = null;
-            UserId = string.Empty;
-            State = State.None;
+            LogInfo($"Application state has been reset");
 
-            LogInfo($"Application state has been reseted");
+            ImportType.IsBase = false;
+            ImportType.IsMonthly = false;
+            ImportType.IsTracking = false;
+            File = null;
+            ImportDetails = null;
+            State = State.None;            
         }
     }
 

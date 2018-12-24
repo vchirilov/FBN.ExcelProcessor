@@ -5,7 +5,7 @@ using System.Text;
 
 namespace ExcelProcessor.Models
 {
-    [Model(Table = "retailer_product_hierarchy")]
+    [Model(Table = "fbn_staging.retailer_product_hierarchy")]
     public class RetailerProductHierarchy: IModel
     {
         [Order(1)] public string Retailer { get; set; }

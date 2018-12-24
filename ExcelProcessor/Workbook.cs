@@ -30,7 +30,7 @@ namespace ExcelProcessor
 
             package = new ExcelPackage(ApplicationState.File);
 
-            if (ApplicationState.HasRequiredSheets)
+            if (ApplicationState.ImportType.IsBase)
             {
                 foreach (var sheet in AppSettings.GetInstance().mainsheets)
                 {
@@ -39,7 +39,7 @@ namespace ExcelProcessor
                 }
             }
 
-            if (ApplicationState.HasMonthlyPlanSheet)
+            if (ApplicationState.ImportType.IsMonthly)
             {
                 foreach (var sheet in AppSettings.GetInstance().monthlysheet)
                 {
@@ -48,7 +48,7 @@ namespace ExcelProcessor
                 }
             }
 
-            if (ApplicationState.HasTrackingSheets)
+            if (ApplicationState.ImportType.IsTracking)
             {
                 foreach (var sheet in AppSettings.GetInstance().trackingsheets)
                 {

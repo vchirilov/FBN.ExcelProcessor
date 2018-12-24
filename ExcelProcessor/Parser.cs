@@ -12,7 +12,7 @@ using static ExcelProcessor.Helpers.Utility;
 
 namespace ExcelProcessor
 {
-    public class Parser
+    public static class Parser
     {
         public static List<T> Parse<T>(ExcelWorksheet worksheet) where T : IModel, new()
         {
@@ -94,15 +94,15 @@ namespace ExcelProcessor
                     var worksheets = package.Workbook.Worksheets.Select(x => x.Name).ToArray();
 
                     if (mainConfiguredSheets.All(x => worksheets.Contains(x, StringComparer.OrdinalIgnoreCase)))
-                        ApplicationState.HasRequiredSheets = true;
+                        ApplicationState.ImportType.IsBase = true;
 
                     if (monthlyConfiguredSheet.All(x => worksheets.Contains(x, StringComparer.OrdinalIgnoreCase)))
-                        ApplicationState.HasMonthlyPlanSheet = true;
+                        ApplicationState.ImportType.IsMonthly = true;
 
                     if (trackingConfiguredSheets.All(x => worksheets.Contains(x, StringComparer.OrdinalIgnoreCase)))
-                        ApplicationState.HasTrackingSheets = true;
+                        ApplicationState.ImportType.IsTracking = true;
 
-                    return ApplicationState.HasRequiredSheets || ApplicationState.HasMonthlyPlanSheet || ApplicationState.HasTrackingSheets;
+                    return ApplicationState.ImportType.IsBase || ApplicationState.ImportType.IsMonthly || ApplicationState.ImportType.IsTracking;
                 }
             }
             catch (Exception exc)
