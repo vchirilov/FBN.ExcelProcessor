@@ -77,7 +77,7 @@ namespace ExcelProcessor
             //}
         }
         
-        public static bool IsWorkbookValid()
+        public static void ValidateWorkbook()
         {
             ApplicationState.State = State.ValidatingWorkbook;
 
@@ -93,25 +93,21 @@ namespace ExcelProcessor
 
                     var worksheets = package.Workbook.Worksheets.Select(x => x.Name).ToArray();
 
-                    if (mainConfiguredSheets.All(x => worksheets.Contains(x, StringComparer.OrdinalIgnoreCase)))
-                        ApplicationState.ImportType.IsBase = true;
+                    if (ApplicationState.ImportType.IsBase && !mainConfiguredSheets.All(x => worksheets.Contains(x, StringComparer.OrdinalIgnoreCase)))
+                        throw new Exception("Workbook is not valid for full-import import type.");
 
-                    if (monthlyConfiguredSheet.All(x => worksheets.Contains(x, StringComparer.OrdinalIgnoreCase)))
-                        ApplicationState.ImportType.IsMonthly = true;
+                    if (ApplicationState.ImportType.IsMonthly && !monthlyConfiguredSheet.All(x => worksheets.Contains(x, StringComparer.OrdinalIgnoreCase)))
+                        throw new Exception("Workbook is not valid for monthly-plan import type.");
 
-                    if (trackingConfiguredSheets.All(x => worksheets.Contains(x, StringComparer.OrdinalIgnoreCase)))
-                        ApplicationState.ImportType.IsTracking = true;
-
-                    return ApplicationState.ImportType.IsBase || ApplicationState.ImportType.IsMonthly || ApplicationState.ImportType.IsTracking;
+                    if (ApplicationState.ImportType.IsTracking && !trackingConfiguredSheets.All(x => worksheets.Contains(x, StringComparer.OrdinalIgnoreCase)))
+                        throw new Exception("Workbook is not valid for monthly-tracking import type.");
                 }
             }
             catch (Exception exc)
             {
                 LogError($"Exception occured in {nameof(Parser)}.IsWorkbookValid() with message {exc.Message}");
-            }
-
-            return false;
-            
+                throw exc;
+            }            
         }
                 
         public static bool IsPageValid(Type type, ExcelWorksheet worksheet)

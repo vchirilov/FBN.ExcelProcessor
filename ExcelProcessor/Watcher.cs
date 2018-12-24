@@ -86,7 +86,10 @@ namespace ExcelProcessor
                 try
                 {
                     Stopwatch stopWatch = new Stopwatch();
-                    stopWatch.Start();                    
+                    stopWatch.Start();
+
+                    //Validate Workbook
+                    Parser.ValidateWorkbook();
 
                     //Validate Worksheets
                     if (!ValidateAllPages(workbook))
