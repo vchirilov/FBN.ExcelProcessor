@@ -132,9 +132,11 @@ namespace ExcelProcessor
                     }
 
 
-                    CleanupCPGReferenceMonthlyPlan(ref dsCPGReferenceMonthlyPlan);
+                    if (!ValidateMonthlyPlan(ref dsCPGReferenceMonthlyPlan))
+                        return;
 
-                    CleanupTrackingResults(ref dsCPGPLResults, ref dsRetailerPLResults);
+                    if (!ValidateTrackingResults(ref dsCPGPLResults, ref dsRetailerPLResults))
+                        return;
 
                     if (!ValidateHistoricalData(dsCpgpl, dsRetailerPL))
                         return;
@@ -459,21 +461,37 @@ namespace ExcelProcessor
         }
 
 
-        private static void CleanupCPGReferenceMonthlyPlan(ref List<CPGReferenceMonthlyPlan> dsCPGReferenceMonthlyPlan)
+        private static bool ValidateMonthlyPlan(ref List<CPGReferenceMonthlyPlan> dsCPGReferenceMonthlyPlan)
         {
             if (ApplicationState.ImportType.IsMonthly)
-            {                
-                dsCPGReferenceMonthlyPlan = dsCPGReferenceMonthlyPlan.Where(x => x.Year == ApplicationState.ImportDetails.Year).ToList();             
+            {
+                if (!dsCPGReferenceMonthlyPlan.Exists(x => x.Year == ApplicationState.ImportDetails.Year))
+                {
+                    LogError($"MonthlyPlan has failed validation. Selected year {ApplicationState.ImportDetails.Year} is missinng in input file.");
+                    return false;
+                }                
+
+                dsCPGReferenceMonthlyPlan = dsCPGReferenceMonthlyPlan.Where(x => x.Year == ApplicationState.ImportDetails.Year).ToList();
             }
+
+            return true;
         }
 
-        private static void CleanupTrackingResults(ref List<CPGPLResults> dsCPGPLResults, ref List<RetailerPLResults> dsRetailerPLResults)
+        private static bool ValidateTrackingResults(ref List<CPGPLResults> dsCPGPLResults, ref List<RetailerPLResults> dsRetailerPLResults)
         {
             if (ApplicationState.ImportType.IsTracking)
             {
+                if (!dsCPGPLResults.Exists(x => x.Year == ApplicationState.ImportDetails.Year) || !dsCPGPLResults.Exists(x => x.Month == ApplicationState.ImportDetails.Month))
+                {
+                    LogError($"TrackingResults has failed validation. Selected [year/month] {ApplicationState.ImportDetails.Year}/{ApplicationState.ImportDetails.Month} is missinng in input file.");
+                    return false;
+                }
+
                 dsCPGPLResults = dsCPGPLResults.Where(x => x.Year == ApplicationState.ImportDetails.Year && x.Month == ApplicationState.ImportDetails.Month).ToList();
                 dsRetailerPLResults = dsRetailerPLResults.Where(x => x.Year == ApplicationState.ImportDetails.Year && x.Month == ApplicationState.ImportDetails.Month).ToList();
             }
+
+            return true;
         }
     }
 }
