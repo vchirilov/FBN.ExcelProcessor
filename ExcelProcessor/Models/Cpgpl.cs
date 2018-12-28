@@ -36,9 +36,9 @@ namespace ExcelProcessor.Models
         [Order(26)] public decimal CPGProfitL1Total { get; set; }
         [Order(27)] public decimal CPGProfitL1Promo { get; set; }
         [Order(28)] public decimal CPGProfitL1NonPromo { get; set; }
-        [Order(29)] public decimal CODBTotal { get; set; }
+        [Order(29)] public decimal CPGCODBTotal { get; set; }
         [Order(30)] public decimal CPGProfitL2Total { get; set; }
-        [Order(31)] public decimal OverheadTotal { get; set; }
+        [Order(31)] public decimal CPGOverheadTotal { get; set; }
         [Order(32)] public decimal CPGProfitL3Total { get; set; }        
 
         public bool IsEmpty()
@@ -71,9 +71,9 @@ namespace ExcelProcessor.Models
                 && CPGProfitL1Total == 0m 
                 && CPGProfitL1Promo == 0m 
                 && CPGProfitL1NonPromo == 0m 
-                && CODBTotal == 0m 
+                && CPGCODBTotal == 0m 
                 && CPGProfitL2Total == 0m 
-                && OverheadTotal == 0m
+                && CPGOverheadTotal == 0m
                 && CPGProfitL3Total == 0m)
                 return true;
             else
