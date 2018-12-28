@@ -27,9 +27,9 @@ namespace ExcelProcessor.Models
         [Order(17)] public decimal RetailerProfitL1Total { get; set; }
         [Order(18)] public decimal RetailerProfitL1Promo { get; set; }
         [Order(19)] public decimal RetailerProfitL1NonPromo { get; set; }
-        [Order(20)] public decimal CODBTotal { get; set; }
+        [Order(20)] public decimal RetailerCODBTotal { get; set; }
         [Order(21)] public decimal RetailerProfitL2Total { get; set; }
-        [Order(22)] public decimal OverheadTotal { get; set; }
+        [Order(22)] public decimal RetailerOverheadTotal { get; set; }
         [Order(23)] public decimal RetailerProfitL3Total { get; set; }
 
         public bool IsEmpty()
@@ -53,9 +53,9 @@ namespace ExcelProcessor.Models
                 RetailerProfitL1Total == 0m &&
                 RetailerProfitL1Promo == 0m &&
                 RetailerProfitL1NonPromo == 0m &&
-                CODBTotal == 0m &&
+                RetailerCODBTotal == 0m &&
                 RetailerProfitL2Total == 0m &&
-                OverheadTotal == 0m &&
+                RetailerOverheadTotal == 0m &&
                 RetailerProfitL3Total == 0m)
                 return true;
             else
