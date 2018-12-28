@@ -52,10 +52,10 @@ namespace ExcelProcessor
                         typeof(T).GetProperty($"{prop.Name}").SetValue(obj, value);
                         col++;
                     }
-                    catch (Exception innerException)
+                    catch (Exception exc)
                     {
-                        LogError($"Exception occured in method {nameof(Parser)}.Parse<>() on type convert for property {sheet}.{prop.Name} with message: {innerException.Message}");
-                        throw innerException;
+                        var message = $"Exception occured in method {nameof(Parser)}.Parse<>() on converting for property {sheet}.{prop.Name}. Can't convert {value} to type {prop.PropertyType.Name}";
+                        throw new Exception(message);
                     }
                 }
 
