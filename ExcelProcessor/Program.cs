@@ -15,7 +15,7 @@ namespace ExcelProcessor
             }
             catch (Exception exc)
             {
-                LogError($"Unhandled excpetion has occured with message: {exc.Message}");
+                LogError($"Program exception: {exc.Message}", false);
             }
             
             Console.ReadKey();

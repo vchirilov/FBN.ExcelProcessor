@@ -52,10 +52,9 @@ namespace ExcelProcessor
                         typeof(T).GetProperty($"{prop.Name}").SetValue(obj, value);
                         col++;
                     }
-                    catch (Exception exc)
+                    catch
                     {
-                        var message = $"Exception occured in method {nameof(Parser)}.Parse<>() on converting for property {sheet}.{prop.Name}. Can't convert {value} to type {prop.PropertyType.Name}";
-                        throw new Exception(message);
+                        throw ApplicationError.Create($"Page [{sheet}], column [{prop.Name}]. Can't convert value [{value}] to type {prop.PropertyType.Name}");
                     }
                 }
 
@@ -94,26 +93,33 @@ namespace ExcelProcessor
                     var worksheets = package.Workbook.Worksheets.Select(x => x.Name).ToArray();
 
                     if (ApplicationState.ImportType.IsBase && !mainConfiguredSheets.All(x => worksheets.Contains(x, StringComparer.OrdinalIgnoreCase)))
-                        throw new Exception("Workbook is not valid for full-import import type.");
+                    {
+                        var missingSheets = string.Join(",", mainConfiguredSheets.Except(worksheets, StringComparer.OrdinalIgnoreCase).ToArray());
+                        throw ApplicationError.Create($"Workbook is not valid for full-import type.Missing pages are {missingSheets}");
+                    }                        
 
                     if (ApplicationState.ImportType.IsMonthly && !monthlyConfiguredSheet.All(x => worksheets.Contains(x, StringComparer.OrdinalIgnoreCase)))
-                        throw new Exception("Workbook is not valid for monthly-plan import type.");
+                    {
+                        var missingSheets = string.Join(",", monthlyConfiguredSheet.Except(worksheets, StringComparer.OrdinalIgnoreCase).ToArray());
+                        throw ApplicationError.Create($"Workbook is not valid for monthly-plan type.Missing pages are {missingSheets}");
+                    }                        
 
                     if (ApplicationState.ImportType.IsTracking && !trackingConfiguredSheets.All(x => worksheets.Contains(x, StringComparer.OrdinalIgnoreCase)))
-                        throw new Exception("Workbook is not valid for monthly-tracking import type.");
+                    {
+                        var missingSheets = string.Join(",", trackingConfiguredSheets.Except(worksheets, StringComparer.OrdinalIgnoreCase).ToArray());
+                        throw ApplicationError.Create($"Workbook is not valid for monthly-tracking type.Missing pages are {missingSheets}");
+                    }                        
                 }
             }
             catch (Exception exc)
             {
-                LogError($"Exception occured in {nameof(Parser)}.IsWorkbookValid() with message {exc.Message}");
                 throw exc;
             }            
         }
                 
-        public static bool IsPageValid(Type type, ExcelWorksheet worksheet)
+        public static void IsPageValid(Type type, ExcelWorksheet worksheet)
         {
             var sheet = type.Name;
-            var response = true;
 
             try
             {
@@ -135,20 +141,13 @@ namespace ExcelProcessor
                     string modelProperty = AttributeHelper.GetPropertyByKey(type,col).Name;
 
                     if (!string.Equals(columnName.ReplaceSpace(), modelProperty, StringComparison.OrdinalIgnoreCase))
-                    {
-                        LogError($"Column {modelProperty} is expected but {columnName} found in sheet {sheet}.");
-                        response = false;
-                        break;
-                    }
+                        throw ApplicationError.Create($"Column {modelProperty} is expected but {columnName} found in sheet {sheet}.");
                 }
             }
             catch (Exception exc)
             {
-                LogError($"Unhandled exception occured in IsPageValid() method with message: {exc.Message}");
-                return false;
+                throw exc;
             }
-
-            return response;
         }
     }
 }

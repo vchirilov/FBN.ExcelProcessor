@@ -46,18 +46,23 @@ namespace ExcelProcessor
                 InitializeImport();
                 Run();               
             }
-            catch(Exception exc)
+            catch(MySqlException exc)
             {
-                var save = true;
-
-                if (exc.GetType() == typeof(MySqlException))
-                    save = false;
-                
-                LogError($"Exception occured in {nameof(Watcher)}.OnCreated() with message {exc.Message}", save);
+                LogError($"Database error: {exc.Message}", false);
+            }
+            catch (ApplicationError exc)
+            {
+                var appError = exc as ApplicationError;
+                LogApplicationError(appError);                
+            }
+            catch (Exception exc)
+            {
+                LogError($"Unhandled exception:{exc.Message}");
             }
             finally
             {
-                LogInfo($"The number of database connections {DbFacade.Connections}");
+                LogInfo($"The number of database connections {DbFacade.Instances}", false);
+
                 ApplicationState.Reset();
                 FileManager.DeleteFile();
             }            
@@ -80,10 +85,10 @@ namespace ExcelProcessor
             List<CPGReferenceMonthlyPlan> dsCPGReferenceMonthlyPlan = null;
             List<CPGPLResults> dsCPGPLResults = null;
             List<RetailerPLResults> dsRetailerPLResults = null;
-                        
-            using (var workbook = new Workbook())
+
+            try
             {
-                try
+                using (var workbook = new Workbook())
                 {
                     Stopwatch stopWatch = new Stopwatch();
                     stopWatch.Start();
@@ -92,11 +97,7 @@ namespace ExcelProcessor
                     Parser.ValidateWorkbook();
 
                     //Validate Worksheets
-                    if (!ValidateAllPages(workbook))
-                    {
-                        LogInfo("Sheets validation has failed.");
-                        return;
-                    }                    
+                    ValidateAllPages(workbook);
 
                     foreach (var worksheet in workbook.Worksheets)
                     {
@@ -131,21 +132,15 @@ namespace ExcelProcessor
                             dsRetailerPLResults = Parser.Parse<RetailerPLResults>(worksheet.Value);
                     }
 
+                    ValidateMonthlyPlan(ref dsCPGReferenceMonthlyPlan);
 
-                    if (!ValidateMonthlyPlan(ref dsCPGReferenceMonthlyPlan))
-                        return;
+                    ValidateTrackingResults(ref dsCPGPLResults, ref dsRetailerPLResults);
 
-                    if (!ValidateTrackingResults(ref dsCPGPLResults, ref dsRetailerPLResults))
-                        return;
+                    ValidateHistoricalData(dsCpgpl, dsRetailerPL);
 
-                    if (!ValidateHistoricalData(dsCpgpl, dsRetailerPL))
-                        return;
+                    ValidateUniques(dsCpgpl, dsCpgProductHierarchy, dsCPGReferenceMonthlyPlan, dsMarketOverview, dsProductAttributes, dsRetailerPL, dsRetailerProductHierarchy, dsSellOutData, dsCPGPLResults, dsRetailerPLResults);
 
-                    if (!ValidateUniques(dsCpgpl, dsCpgProductHierarchy, dsCPGReferenceMonthlyPlan, dsMarketOverview, dsProductAttributes, dsRetailerPL, dsRetailerProductHierarchy, dsSellOutData, dsCPGPLResults, dsRetailerPLResults))
-                        return;                                       
-
-                    if (!ValidateEANs(dsRetailerProductHierarchy, dsCpgpl, dsCPGReferenceMonthlyPlan, dbFacade))
-                        return;
+                    ValidateEANs(dsRetailerProductHierarchy, dsCpgpl, dsCPGReferenceMonthlyPlan, dbFacade);
 
                     if (dsProductAttributes != null)
                         dbFacade.Insert(dsProductAttributes);
@@ -175,9 +170,9 @@ namespace ExcelProcessor
                         dbFacade.Insert(dsCPGPLResults);
 
                     if (dsRetailerPLResults != null)
-                        dbFacade.Insert(dsRetailerPLResults);                  
+                        dbFacade.Insert(dsRetailerPLResults);
 
-                    dbFacade.LoadFromStagingToCore (ApplicationState.ImportType.IsBase, ApplicationState.ImportType.IsMonthly, ApplicationState.ImportType.IsTracking);
+                    dbFacade.LoadFromStagingToCore(ApplicationState.ImportType.IsBase, ApplicationState.ImportType.IsMonthly, ApplicationState.ImportType.IsTracking);
 
                     stopWatch.Stop();
                     TimeSpan ts = stopWatch.Elapsed;
@@ -187,15 +182,15 @@ namespace ExcelProcessor
                     string elapsedTime = string.Format("{0:00}:{1:00}:{2:00}.{3:00}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10);
                     LogInfo($"Import duration: {elapsedTime}");
                 }
-                catch (Exception exc)
-                {
-                    LogError($"Exception occured in {nameof(Watcher)}.Run() with message {exc.Message}");
-                    throw exc;
-                }
-            }                
-        }
-        
-        private static bool ValidateAllPages(Workbook workbook)
+            }
+            catch (Exception exc)
+            {
+                throw exc;
+            }
+                            
+        }        
+
+        private static void ValidateAllPages(Workbook workbook)
         {
             ApplicationState.State = State.InitializingWorksheet;
 
@@ -212,15 +207,12 @@ namespace ExcelProcessor
 
             foreach (var item in query)
             {
-                if (!Parser.IsPageValid(item.type,item.worksheet.Value))
-                    return false;                
+                Parser.IsPageValid(item.type, item.worksheet.Value);                
             }
-
-            return true;
         }
 
 
-        private static bool ValidateEANs (
+        private static void ValidateEANs (
             List<RetailerProductHierarchy> dsRetailerProductHierarchy,
             List<Cpgpl> dsCpgpl, 
             List<CPGReferenceMonthlyPlan> dsCPGReferenceMonthlyPlan, 
@@ -233,9 +225,7 @@ namespace ExcelProcessor
                 var isValid = dsCpgpl.All(e => dsRetailerProductHierarchy.Exists(h => string.Equals(h.EAN, e.EAN)));
 
                 if (!isValid)
-                    LogError($"EANs cross-page validation has failed for {nameof(Cpgpl)} page");
-
-                return isValid;
+                    throw ApplicationError.Create($"EANs cross-page validation has failed for {nameof(Cpgpl)} page");
             }                
 
             if (ApplicationState.ImportType.IsMonthly)
@@ -244,16 +234,11 @@ namespace ExcelProcessor
                 var isValid = dsCPGReferenceMonthlyPlan.All(e => dbRetailerProductHierarchy.Exists(h => string.Equals(h.EAN, e.EAN)));
 
                 if (!isValid)
-                    LogError($"EANs cross-page validation has failed for {nameof(CPGReferenceMonthlyPlan)} page");
-
-                return isValid;
-
+                    throw ApplicationError.Create($"EANs cross-page validation has failed for {nameof(CPGReferenceMonthlyPlan)} page");
             }
-
-            return true;
         }
 
-        private static bool ValidateUniques(
+        private static void ValidateUniques(
             List<Cpgpl> dsCpgpl, 
             List<CpgProductHierarchy> dsCpgProductHierarchy, 
             List<CPGReferenceMonthlyPlan> dsCPGReferenceMonthlyPlan, 
@@ -267,66 +252,44 @@ namespace ExcelProcessor
         {
             ApplicationState.State = State.ValidatingUniqueValues;
 
-            LogInfo($"Validate For Unique Values");
+            LogInfo($"Validate Unique Values");
 
             if (ApplicationState.ImportType.IsBase)
             {
                 var dataSet1 = dsCpgpl.Select(x => new { x.Year, x.YearType, x.Retailer, x.Banner, x.Country, x.EAN }).Distinct();
 
                 if (dataSet1.Count() != dsCpgpl.Count())
-                {
-                    LogError($"Year,YearType,Retailer,Banner,Country,EAN have duplicates in {nameof(Cpgpl)}");
-                    return false;
-                }
+                    throw ApplicationError.Create($"Year,YearType,Retailer,Banner,Country,EAN have duplicates in {nameof(Cpgpl)}");
 
                 var dataSet2 = dsCpgProductHierarchy.Select(x => new {x.EAN}).Distinct();
 
                 if (dataSet2.Count() != dsCpgProductHierarchy.Count())
-                {
-                    LogError($"EAN has duplicates in {nameof(CpgProductHierarchy)}");
-                    return false;
-                }
-
+                    throw ApplicationError.Create($"EAN has duplicates in {nameof(CpgProductHierarchy)}");
+                
                 var dataSet4 = dsMarketOverview.Select(x => new { x.Year, x.YearType, x.CPG, x.Retailer, x.Banner, x.Country, x.CategoryGroup, x.NielsenCategory, x.Market, x.MarketDesc, x.Segment, x.SubSegment }).Distinct();
 
                 if (dataSet4.Count() != dsMarketOverview.Count())
-                {
-                    LogError($"Year,YearType,CPG,Retailer,Banner,Country,CategoryGroup,NielsenCategory,Market,MarketDesc,Segment,SubSegment have duplicates in {nameof(MarketOverview)}");
-                    return false;
-                }
-                
+                    throw ApplicationError.Create($"Year,YearType,CPG,Retailer,Banner,Country,CategoryGroup,NielsenCategory,Market,MarketDesc,Segment,SubSegment have duplicates in {nameof(MarketOverview)}");
+                                
                 var dataSet5 = dsProductAttributes.Select(x => new { x.EAN }).Distinct();
 
                 if (dataSet5.Count() != dsProductAttributes.Count())
-                {
-                    LogError($"EAN has duplicates in {nameof(ProductAttributes)}");
-                    return false;
-                }
-
+                    throw ApplicationError.Create($"EAN has duplicates in {nameof(ProductAttributes)}");
+                
                 var dataSet6 = dsRetailerPL.Select(x => new { x.Year, x.YearType, x.Retailer, x.Banner, x.Country, x.EAN }).Distinct();
 
                 if (dataSet6.Count() != dsRetailerPL.Count())
-                {
-                    LogError($"Year,YearType,Retailer,Banner,Country,EAN have duplicates in {nameof(RetailerPL)}");
-                    return false;
-                }
+                    throw ApplicationError.Create($"Year,YearType,Retailer,Banner,Country,EAN have duplicates in {nameof(RetailerPL)}");
 
                 var dataSet7 = dsRetailerProductHierarchy.Select(x => new { x.Retailer, x.Banner, x.Country, x.EAN }).Distinct();
 
                 if (dataSet7.Count() != dsRetailerProductHierarchy.Count())
-                {
-                    LogError($"Retailer,Banner,Country,EAN have duplicates in {nameof(RetailerProductHierarchy)}");
-                    return false;
-                }
-
+                    throw ApplicationError.Create($"Retailer,Banner,Country,EAN have duplicates in {nameof(RetailerProductHierarchy)}");
 
                 var dataSet8 = dsSellOutData.Select(x => new { x.Year, x.YearType, x.CPG, x.Retailer, x.Banner, x.Country, x.EAN }).Distinct();
 
                 if (dataSet8.Count() != dsSellOutData.Count())
-                {
-                    LogError($" Year, YearType, CPG, Retailer, Banner, Country, EAN have duplicates in {nameof(SellOutData)}");
-                    return false;
-                }                
+                    throw ApplicationError.Create($" Year, YearType, CPG, Retailer, Banner, Country, EAN have duplicates in {nameof(SellOutData)}");
             }
 
             if (ApplicationState.ImportType.IsMonthly)
@@ -334,10 +297,7 @@ namespace ExcelProcessor
                 var dataSet3 = dsCPGReferenceMonthlyPlan.Select(x => new { x.Year, x.YearType, x.Retailer, x.Banner, x.Country, x.EAN }).Distinct();
 
                 if (dataSet3.Count() != dsCPGReferenceMonthlyPlan.Count())
-                {
-                    LogError($"Year,YearType,Retailer,Banner,Country,EAN have duplicates in {nameof(CPGReferenceMonthlyPlan)}");
-                    return false;
-                }
+                    throw ApplicationError.Create($"Year,YearType,Retailer,Banner,Country,EAN have duplicates in {nameof(CPGReferenceMonthlyPlan)}");
             }
 
             if (ApplicationState.ImportType.IsTracking)
@@ -345,25 +305,16 @@ namespace ExcelProcessor
                 var dataSet9 = dsCPGPLResults.Select(x => new { x.Year, x.YearType, x.Month, x.Retailer, x.Banner, x.Country, x.EAN }).Distinct();
 
                 if (dataSet9.Count() != dsCPGPLResults.Count())
-                {
-                    LogError($"Year, YearType, Month, Retailer, Banner, Country, EAN have duplicates in {nameof(CPGPLResults)}");
-                    return false;
-                }
+                    throw ApplicationError.Create($"Year, YearType, Month, Retailer, Banner, Country, EAN have duplicates in {nameof(CPGPLResults)}");
 
                 var dataSet10 = dsRetailerPLResults.Select(x => new { x.Year, x.YearType, x.Month, x.Retailer, x.Banner, x.Country, x.EAN }).Distinct();
 
                 if (dataSet9.Count() != dsRetailerPLResults.Count())
-                {
-                    LogError($"Year, YearType, Month, Retailer, Banner, Country, EAN have duplicates in {nameof(RetailerPLResults)}");
-                    return false;
-                }
+                    throw ApplicationError.Create($"Year, YearType, Month, Retailer, Banner, Country, EAN have duplicates in {nameof(RetailerPLResults)}");
             }
-
-
-            return true;
         }
 
-        private static bool ValidateHistoricalData(List<Cpgpl> dsCpgpl, List<RetailerPL> dsRetailerPL )
+        private static void ValidateHistoricalData(List<Cpgpl> dsCpgpl, List<RetailerPL> dsRetailerPL )
         {
             if (ApplicationState.ImportType.IsBase)
             {
@@ -373,22 +324,14 @@ namespace ExcelProcessor
 
                 int currYear = DateTime.Now.Year;
                 int year1 = dsCpgpl.Select(x => x.Year).Min();
-                int year2 = dsCpgpl.Select(x => x.Year).Min();
+                int year2 = dsRetailerPL.Select(x => x.Year).Min();
 
                 if (currYear == year1)
-                {
-                    LogError($"{nameof(Cpgpl)} has no historical data");
-                    return false;
-                }
-
+                    throw ApplicationError.Create($"{nameof(Cpgpl)} has no historical data");
+                
                 if (currYear == year2)
-                {
-                    LogError($"{nameof(RetailerPL)} has no historical data");
-                    return false;
-                }
+                    throw ApplicationError.Create($"{nameof(RetailerPL)} has no historical data");
             }
-
-            return true;
         }
 
         private static void InitializeImport()
@@ -400,7 +343,7 @@ namespace ExcelProcessor
                 var value = dbFacade.GetAll<ImportDetails>().FirstOrDefault(x => x.Uuid.ToString().Equals(fileWithoutExtension, StringComparison.OrdinalIgnoreCase));
 
                 if (value == null)
-                    throw new Exception("Failed to extract import information from fbn_import database.");
+                    throw ApplicationError.Create("Failed to extract import information from fbn_import database.");
 
                 switch (value.ImportType)
                 {
@@ -414,14 +357,13 @@ namespace ExcelProcessor
                         ApplicationState.ImportType.IsTracking = true;
                         break;
                     default:
-                        throw new Exception("There is no proper value for ImportType column. Allowed values are full-import, monthly-plan, monthly-tracking.");
+                        throw ApplicationError.Create("There is no proper value for ImportType column. Allowed values are full-import, monthly-plan, monthly-tracking.");
                 }
 
                 ApplicationState.ImportDetails = value;
             }
             catch (Exception exc)
             {
-                LogError($"Exception occured in {nameof(Watcher)}.GetImportInformation() with message {exc.Message}");
                 throw exc;
             }            
         }
@@ -451,47 +393,33 @@ namespace ExcelProcessor
                     LogWarning("File copy in progress...");
 
                     if (++attempts >= 20)
-                    {
-                        string message = $"File cannot be copied. The number of {attempts} attempts is over. The file is too big or internet connection is slow.";
-                        LogError($"Exception occured in {nameof(Watcher)}.WaitForFile() with message {message}");
-                        throw new Exception(message);
-                    }
+                        throw ApplicationError.Create($"File cannot be copied. The number of {attempts} attempts is over. The file is too big or internet connection is slow.");
                 }
             }
         }
 
 
-        private static bool ValidateMonthlyPlan(ref List<CPGReferenceMonthlyPlan> dsCPGReferenceMonthlyPlan)
+        private static void ValidateMonthlyPlan(ref List<CPGReferenceMonthlyPlan> dsCPGReferenceMonthlyPlan)
         {
             if (ApplicationState.ImportType.IsMonthly)
             {
                 if (!dsCPGReferenceMonthlyPlan.Exists(x => x.Year == ApplicationState.ImportDetails.Year))
-                {
-                    LogError($"MonthlyPlan has failed validation. Selected year {ApplicationState.ImportDetails.Year} is missinng in input file.");
-                    return false;
-                }                
+                    throw ApplicationError.Create($"MonthlyPlan has failed validation. Selected year {ApplicationState.ImportDetails.Year} is missinng in input file.");
 
                 dsCPGReferenceMonthlyPlan = dsCPGReferenceMonthlyPlan.Where(x => x.Year == ApplicationState.ImportDetails.Year).ToList();
             }
-
-            return true;
         }
 
-        private static bool ValidateTrackingResults(ref List<CPGPLResults> dsCPGPLResults, ref List<RetailerPLResults> dsRetailerPLResults)
+        private static void ValidateTrackingResults(ref List<CPGPLResults> dsCPGPLResults, ref List<RetailerPLResults> dsRetailerPLResults)
         {
             if (ApplicationState.ImportType.IsTracking)
             {
                 if (!dsCPGPLResults.Exists(x => x.Year == ApplicationState.ImportDetails.Year) || !dsCPGPLResults.Exists(x => x.Month == ApplicationState.ImportDetails.Month))
-                {
-                    LogError($"TrackingResults has failed validation. Selected [year/month] {ApplicationState.ImportDetails.Year}/{ApplicationState.ImportDetails.Month} is missinng in input file.");
-                    return false;
-                }
+                    throw ApplicationError.Create($"TrackingResults has failed validation. Selected [year/month] {ApplicationState.ImportDetails.Year}/{ApplicationState.ImportDetails.Month} is missinng in input file.");
 
                 dsCPGPLResults = dsCPGPLResults.Where(x => x.Year == ApplicationState.ImportDetails.Year && x.Month == ApplicationState.ImportDetails.Month).ToList();
                 dsRetailerPLResults = dsRetailerPLResults.Where(x => x.Year == ApplicationState.ImportDetails.Year && x.Month == ApplicationState.ImportDetails.Month).ToList();
             }
-
-            return true;
         }
     }
 }

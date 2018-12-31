@@ -14,7 +14,7 @@ namespace ExcelProcessor
 {
     public class DbFacade
     {
-        public static int Connections = 0;
+        public static int Instances = 0;
         private readonly int BATCH = 100;
         private readonly MySqlConnection sqlConnection;        
         private string ConnectionString { get; } = AppSettings.GetInstance().connectionString;
@@ -22,7 +22,7 @@ namespace ExcelProcessor
         public DbFacade()
         {
             sqlConnection = new MySqlConnection(ConnectionString);
-            Interlocked.Increment(ref Connections);
+            Interlocked.Increment(ref Instances);
         }       
 
         public void Insert<T>(List<T> items) where T : new()
@@ -80,7 +80,7 @@ namespace ExcelProcessor
                         }
                         catch (Exception exc)
                         {
-                            LogError($"Insert has failed: {exc.Message}");
+                            throw ApplicationError.Create($"Database insert for table {dbTable} has failed: {exc.Message}");
                         }
                     }
                 }
@@ -138,8 +138,7 @@ namespace ExcelProcessor
                     catch (Exception exc)
                     {
                         sqlTransaction.Rollback();
-                        LogError($"Exception has occured in method {nameof(DbFacade)}.ExecuteNonQuery() with message {exc.Message}");
-                        throw exc;
+                        throw ApplicationError.Create($"{message}: {exc.Message}");
                     }
                 }
 
@@ -155,7 +154,7 @@ namespace ExcelProcessor
 
         ~DbFacade()
         {
-            Interlocked.Decrement(ref Connections);
+            Interlocked.Decrement(ref Instances);
         }
     }    
 }

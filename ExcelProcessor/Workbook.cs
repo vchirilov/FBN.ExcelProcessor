@@ -19,7 +19,7 @@ namespace ExcelProcessor
         public void Dispose()
         {
             foreach (var worksheet in Worksheets)
-                worksheet.Value.Dispose();
+                worksheet.Value?.Dispose();
 
             package.Dispose();
         }

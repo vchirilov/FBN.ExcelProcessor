@@ -21,7 +21,7 @@ namespace ExcelProcessor
         public static State State { get; set; } = State.None;
         public static void Reset()
         {
-            LogInfo($"Application state has been reset");
+            LogInfo($"Application state has been reset", false);
 
             ImportType.IsBase = false;
             ImportType.IsMonthly = false;

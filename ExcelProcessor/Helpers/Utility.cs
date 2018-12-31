@@ -64,14 +64,24 @@ namespace ExcelProcessor.Helpers
             Console.WriteLine();
         }
 
+        public static void LogApplicationError(ApplicationError err, bool save = true)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine($"Error: {err.Text}. Import has failed.");
+            Console.ForegroundColor = ConsoleColor.White;
+
+            if (save)
+                DbFacade.LogRecord(ApplicationState.State.ToString(), "Error", err.ToString());
+        }
+
         public static void LogError(string txt, bool save = true)
         {
             Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine($"ERROR: {txt}. Import has failed.");
+            Console.WriteLine($"Error: {txt}");
             Console.ForegroundColor = ConsoleColor.White;
-                        
+
             if (save)
-                DbFacade.LogRecord(ApplicationState.State.ToString(), "Error", txt);            
+                DbFacade.LogRecord(ApplicationState.State.ToString(), "Error", txt);
         }
 
         public static void LogWarning(string txt, bool save = true)
