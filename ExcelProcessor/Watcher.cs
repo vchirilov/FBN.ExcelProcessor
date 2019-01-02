@@ -134,7 +134,7 @@ namespace ExcelProcessor
 
                     ValidateMonthlyPlan(ref dsCPGReferenceMonthlyPlan);
 
-                    ValidateTrackingResults(ref dsCPGPLResults, ref dsRetailerPLResults);
+                    ValidateTrackingResults(dsCPGPLResults, dsRetailerPLResults);
 
                     ValidateHistoricalData(dsCpgpl, dsRetailerPL);
 
@@ -309,7 +309,7 @@ namespace ExcelProcessor
 
                 var dataSet10 = dsRetailerPLResults.Select(x => new { x.Year, x.YearType, x.Month, x.Retailer, x.Banner, x.Country, x.EAN }).Distinct();
 
-                if (dataSet9.Count() != dsRetailerPLResults.Count())
+                if (dataSet10.Count() != dsRetailerPLResults.Count())
                     throw ApplicationError.Create($"Year, YearType, Month, Retailer, Banner, Country, EAN have duplicates in {nameof(RetailerPLResults)}");
             }
         }
@@ -410,15 +410,21 @@ namespace ExcelProcessor
             }
         }
 
-        private static void ValidateTrackingResults(ref List<CPGPLResults> dsCPGPLResults, ref List<RetailerPLResults> dsRetailerPLResults)
+        private static void ValidateTrackingResults(List<CPGPLResults> dsCPGPLResults, List<RetailerPLResults> dsRetailerPLResults)
         {
             if (ApplicationState.ImportType.IsTracking)
             {
-                if (!dsCPGPLResults.Exists(x => x.Year == ApplicationState.ImportDetails.Year) || !dsCPGPLResults.Exists(x => x.Month == ApplicationState.ImportDetails.Month))
-                    throw ApplicationError.Create($"TrackingResults has failed validation. Selected [year/month] {ApplicationState.ImportDetails.Year}/{ApplicationState.ImportDetails.Month} is missinng in input file.");
+                var year = ApplicationState.ImportDetails.Year;
+                var month = ApplicationState.ImportDetails.Month;
 
-                dsCPGPLResults = dsCPGPLResults.Where(x => x.Year == ApplicationState.ImportDetails.Year && x.Month == ApplicationState.ImportDetails.Month).ToList();
-                dsRetailerPLResults = dsRetailerPLResults.Where(x => x.Year == ApplicationState.ImportDetails.Year && x.Month == ApplicationState.ImportDetails.Month).ToList();
+                if (!dsCPGPLResults.All(x => x.Year == year && x.Month == month))
+                    throw ApplicationError.Create($"TrackingResults has failed validation for {nameof(CPGPLResults)}. [Year & Month] must have [{year} & {month}] values in input file.");
+
+                if (!dsRetailerPLResults.All(x => x.Year == year && x.Month == month))
+                    throw ApplicationError.Create($"TrackingResults has failed validation for {nameof(RetailerPLResults)}. [Year & Month] must have [{year} & {month}] values in input file.");
+
+                //dsCPGPLResults = dsCPGPLResults.Where(x => x.Year == ApplicationState.ImportDetails.Year && x.Month == ApplicationState.ImportDetails.Month).ToList();
+                //dsRetailerPLResults = dsRetailerPLResults.Where(x => x.Year == ApplicationState.ImportDetails.Year && x.Month == ApplicationState.ImportDetails.Month).ToList();
             }
         }
     }
