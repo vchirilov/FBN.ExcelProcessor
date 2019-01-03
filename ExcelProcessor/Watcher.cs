@@ -207,7 +207,7 @@ namespace ExcelProcessor
 
             foreach (var item in query)
             {
-                Parser.IsPageValid(item.type, item.worksheet.Value);                
+                Parser.ValidatePage(item.type, item.worksheet.Value);                
             }
         }
 

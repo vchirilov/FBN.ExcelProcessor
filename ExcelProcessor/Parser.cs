@@ -117,7 +117,7 @@ namespace ExcelProcessor
             }            
         }
                 
-        public static void IsPageValid(Type type, ExcelWorksheet worksheet)
+        public static void ValidatePage(Type type, ExcelWorksheet worksheet)
         {
             var sheet = type.Name;
 
