@@ -17,7 +17,7 @@ namespace ExcelProcessor
         public static int Instances = 0;
         private readonly int BATCH = 100;
         private readonly MySqlConnection sqlConnection;        
-        private string ConnectionString { get; } = AppSettings.GetInstance().connectionString;
+        private string ConnectionString { get; } = AppSettings.GetInstance().ConnectionString;
 
         public DbFacade()
         {

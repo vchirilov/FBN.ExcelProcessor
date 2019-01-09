@@ -31,8 +31,6 @@ namespace ExcelProcessor.Models
         [Order(21)] public decimal RetailerProfitL2Total { get; set; }
         [Order(22)] public decimal RetailerOverheadTotal { get; set; }
         [Order(23)] public decimal RetailerProfitL3Total { get; set; }
-        [Order(24)] public decimal GrossProfit { get; set; }
-        [Order(25)] public decimal Revenue { get; set; }
 
         public bool IsEmpty()
         {
@@ -58,9 +56,7 @@ namespace ExcelProcessor.Models
                 && RetailerCODBTotal == 0m
                 && RetailerProfitL2Total == 0m
                 && RetailerOverheadTotal == 0m
-                && RetailerProfitL3Total == 0m
-                && GrossProfit == 0m
-                && Revenue == 0m)
+                && RetailerProfitL3Total == 0m)
                 return true;
             else
                 return false;

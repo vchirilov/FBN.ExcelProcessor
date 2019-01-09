@@ -38,5 +38,10 @@ namespace ExcelProcessor.Helpers
             if (string.IsNullOrEmpty(value)) return value;
             return value.Length <= maxLength ? value : value.Substring(0, maxLength);
         }
+
+        public static bool IsApproximate(this decimal first, decimal second, decimal margin)
+        {
+            return Math.Abs(first - second) <= margin;
+        }
     }
 }

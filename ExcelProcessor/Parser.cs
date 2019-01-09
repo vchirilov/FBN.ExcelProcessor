@@ -86,9 +86,9 @@ namespace ExcelProcessor
             {
                 using (ExcelPackage package = new ExcelPackage(ApplicationState.File))
                 {
-                    var mainConfiguredSheets = AppSettings.GetInstance().mainsheets;
-                    var monthlyConfiguredSheet = AppSettings.GetInstance().monthlysheet;
-                    var trackingConfiguredSheets = AppSettings.GetInstance().trackingsheets;
+                    var mainConfiguredSheets = AppSettings.GetInstance().MainSheets;
+                    var monthlyConfiguredSheet = AppSettings.GetInstance().MonthlySheet;
+                    var trackingConfiguredSheets = AppSettings.GetInstance().TrackingSheets;
 
                     var worksheets = package.Workbook.Worksheets.Select(x => x.Name).ToArray();
 

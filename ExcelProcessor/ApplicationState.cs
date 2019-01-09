@@ -1,8 +1,6 @@
 ﻿using ExcelProcessor.Models;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using static ExcelProcessor.Helpers.Utility;
 
 namespace ExcelProcessor
@@ -19,6 +17,7 @@ namespace ExcelProcessor
         public static FileInfo File { get; set; } = null;
         public static ImportDetails ImportDetails { get; set;} = null;
         public static State State { get; set; } = State.None;
+        
         public static void Reset()
         {
             LogInfo($"Application state has been reset", false);
@@ -41,6 +40,7 @@ namespace ExcelProcessor
         ValidatingHistoricalData,
         ValidatingUniqueValues,
         ValidatingEANs,
+        SanityCheck,
         Loading,
         Finished
     };

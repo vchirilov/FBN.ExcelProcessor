@@ -1,4 +1,5 @@
-﻿using ExcelProcessor.Helpers;
+﻿using ExcelProcessor.Config;
+using ExcelProcessor.Helpers;
 using ExcelProcessor.Models;
 using MySql.Data.MySqlClient;
 using OfficeOpenXml;
@@ -142,6 +143,8 @@ namespace ExcelProcessor
 
                     ValidateEANs(dsRetailerProductHierarchy, dsCpgpl, dsCPGReferenceMonthlyPlan, dbFacade);
 
+                    //ValidateSanityCheck(dsCpgpl);
+
                     if (dsProductAttributes != null)
                         dbFacade.Insert(dsProductAttributes);
 
@@ -218,10 +221,11 @@ namespace ExcelProcessor
             List<CPGReferenceMonthlyPlan> dsCPGReferenceMonthlyPlan, 
             DbFacade dbFacade)
         {
-            ApplicationState.State = State.ValidatingEANs;
-
             if (ApplicationState.ImportType.IsBase)
             {
+                ApplicationState.State = State.ValidatingEANs;
+                LogInfo($"Validate EAN's");
+
                 var isValid = dsCpgpl.All(e => dsRetailerProductHierarchy.Exists(h => string.Equals(h.EAN, e.EAN)));
 
                 if (!isValid)
@@ -230,6 +234,9 @@ namespace ExcelProcessor
 
             if (ApplicationState.ImportType.IsMonthly)
             {
+                ApplicationState.State = State.ValidatingEANs;
+                LogInfo($"Validate EAN's");
+
                 var dbRetailerProductHierarchy = dbFacade.GetAll<RetailerProductHierarchy>();
                 var isValid = dsCPGReferenceMonthlyPlan.All(e => dbRetailerProductHierarchy.Exists(h => string.Equals(h.EAN, e.EAN)));
 
@@ -398,7 +405,6 @@ namespace ExcelProcessor
             }
         }
 
-
         private static void ValidateMonthlyPlan(ref List<CPGReferenceMonthlyPlan> dsCPGReferenceMonthlyPlan)
         {
             if (ApplicationState.ImportType.IsMonthly)
@@ -425,6 +431,43 @@ namespace ExcelProcessor
 
                 //dsCPGPLResults = dsCPGPLResults.Where(x => x.Year == ApplicationState.ImportDetails.Year && x.Month == ApplicationState.ImportDetails.Month).ToList();
                 //dsRetailerPLResults = dsRetailerPLResults.Where(x => x.Year == ApplicationState.ImportDetails.Year && x.Month == ApplicationState.ImportDetails.Month).ToList();
+            }
+        }
+
+        private static void ValidateSanityCheck(List<Cpgpl> dsCpgpl)
+        {
+            var margin = AppSettings.GetInstance().Margin;
+
+            ApplicationState.State = State.SanityCheck;
+
+            LogInfo($"Validate SanityCheck with margin {margin}");
+
+            if (ApplicationState.ImportType.IsBase)
+            {
+                if (!dsCpgpl.All(x => x.SellInVolumeTotal.IsApproximate(x.SellInVolumePromo + x.SellInVolumeNonPromo, margin)))
+                    throw ApplicationError.Create($"Formula [SellInVolumeTotal = SellInVolumePromo + SellInVolumeNonPromo] in page {nameof(Cpgpl)} is not satisfied");
+
+                //dsCpgpl.Where(x=> x.SellInVolumeTotal - x.SellInVolumePromo - x.SellInVolumeNonPromo !=0 )
+                //    .ToList()
+                //    .ForEach(x => Console.WriteLine($"{x.Year}.{x.EAN} = {x.SellInVolumeTotal - x.SellInVolumePromo - x.SellInVolumeNonPromo}, {x.SellInVolumeTotal}, {x.SellInVolumePromo}, {x.SellInVolumeNonPromo}"));
+
+                if (!dsCpgpl.All(x => x.TTSTotal.IsApproximate(x.ListPricePerUnit - x.NetNetPrice, margin)))
+                    throw ApplicationError.Create($"Formula [TTSTotal = ListPricePerUnit – NetNetPrice] in page {nameof(Cpgpl)} is not satisfied");
+
+                if (!dsCpgpl.All(x => x.ThreeNetPrice.IsApproximate((x.SellInVolumePromo * x.PromoPrice + x.SellInVolumeNonPromo * x.NetNetPrice) / x.SellInVolumeTotal, margin)))
+                    throw ApplicationError.Create($"Formula [3NetPrice = (SellInVolumePromo*PromoPrice + SellInVolumeNonPromo*NetNetPrice) / SellInVolumeTotal] in page {nameof(Cpgpl)} is not satisfied");
+
+                if (!dsCpgpl.All(x => x.CPPTotal.IsApproximate(x.NetNetPrice - x.ThreeNetPrice, margin)))
+                    throw ApplicationError.Create($"Formula [CPPTotal = NetNetPrice-3NetPrice] in page {nameof(Cpgpl)} is not satisfied");
+
+                if (!dsCpgpl.All(x => x.CPGProfitL1Total.IsApproximate(x.ThreeNetPrice - x.COGSTotal, margin)))
+                    throw ApplicationError.Create($"Formula [CPGProfitL1total = 3NetPrice-COGSTotal] in page {nameof(Cpgpl)} is not satisfied");
+
+                if (!dsCpgpl.All(x => x.CPGProfitL1NonPromo.IsApproximate(x.NetNetPrice - x.COGSTotal, margin)))
+                    throw ApplicationError.Create($"Formula [CPGProfitL1NonPromo = NetNetPrice - COGSTotal] in page {nameof(Cpgpl)} is not satisfied");
+
+                if (!dsCpgpl.All(x => x.CPGProfitL1Promo.IsApproximate(x.PromoPrice - x.COGSTotal, margin)))
+                    throw ApplicationError.Create($"Formula [CPGProfitL1Promo = PromoPrice-COGSTotal] in page {nameof(Cpgpl)} is not satisfied");
             }
         }
     }

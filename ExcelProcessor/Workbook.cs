@@ -32,7 +32,7 @@ namespace ExcelProcessor
 
             if (ApplicationState.ImportType.IsBase)
             {
-                foreach (var sheet in AppSettings.GetInstance().mainsheets)
+                foreach (var sheet in AppSettings.GetInstance().MainSheets)
                 {
                     LogInfo($"Initializing page {sheet}...");
                     Worksheets.Add(sheet, package.Workbook.Worksheets[sheet]);
@@ -41,7 +41,7 @@ namespace ExcelProcessor
 
             if (ApplicationState.ImportType.IsMonthly)
             {
-                foreach (var sheet in AppSettings.GetInstance().monthlysheet)
+                foreach (var sheet in AppSettings.GetInstance().MonthlySheet)
                 {
                     LogInfo($"Initializing page {sheet}...");
                     Worksheets.Add(sheet, package.Workbook.Worksheets[sheet]);
@@ -50,7 +50,7 @@ namespace ExcelProcessor
 
             if (ApplicationState.ImportType.IsTracking)
             {
-                foreach (var sheet in AppSettings.GetInstance().trackingsheets)
+                foreach (var sheet in AppSettings.GetInstance().TrackingSheets)
                 {
                     LogInfo($"Initializing page {sheet}...");
                     Worksheets.Add(sheet, package.Workbook.Worksheets[sheet]);
