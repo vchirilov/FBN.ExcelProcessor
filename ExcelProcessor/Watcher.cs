@@ -44,8 +44,7 @@ namespace ExcelProcessor
             {
                 ClearScreen();
                 AddHeader();                
-                WaitForFile(e);
-                InitializeImport();
+                WaitForFile(e);                
                 Run();               
             }
             catch(MySqlException exc)
@@ -351,6 +350,9 @@ namespace ExcelProcessor
 
                 if (value == null)
                     throw ApplicationError.Create("Failed to extract import information from fbn_import database.");
+                else
+                    ApplicationState.ImportDetails = value;
+
 
                 switch (value.ImportType)
                 {
@@ -365,9 +367,7 @@ namespace ExcelProcessor
                         break;
                     default:
                         throw ApplicationError.Create("There is no proper value for ImportType column. Allowed values are full-import, monthly-plan, monthly-tracking.");
-                }
-
-                ApplicationState.ImportDetails = value;
+                }                
             }
             catch (Exception exc)
             {
@@ -387,7 +387,8 @@ namespace ExcelProcessor
                     using (ExcelPackage package = new ExcelPackage(FileManager.File))
                     {
                         ApplicationState.File = FileManager.File;
-                        LogInfo($"File [{arg.Name}] has been created.");
+                        InitializeImport();
+                        LogInfo($"File [{ApplicationState.ImportDetails.FileName}] has been uploaded");
                     }
 
                     break;

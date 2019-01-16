@@ -34,7 +34,7 @@ namespace ExcelProcessor
             {
                 foreach (var sheet in AppSettings.GetInstance().MainSheets)
                 {
-                    LogInfo($"Initializing page {sheet}...");
+                    LogInfo($"Fetching data from page {sheet}...");
                     Worksheets.Add(sheet, package.Workbook.Worksheets[sheet]);
                 }
             }
@@ -43,7 +43,7 @@ namespace ExcelProcessor
             {
                 foreach (var sheet in AppSettings.GetInstance().MonthlySheet)
                 {
-                    LogInfo($"Initializing page {sheet}...");
+                    LogInfo($"Fetching data from page {sheet}...");
                     Worksheets.Add(sheet, package.Workbook.Worksheets[sheet]);
                 }
             }
@@ -52,7 +52,7 @@ namespace ExcelProcessor
             {
                 foreach (var sheet in AppSettings.GetInstance().TrackingSheets)
                 {
-                    LogInfo($"Initializing page {sheet}...");
+                    LogInfo($"Fetching data from page {sheet}...");
                     Worksheets.Add(sheet, package.Workbook.Worksheets[sheet]);
                 }
             }

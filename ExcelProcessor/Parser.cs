@@ -80,7 +80,7 @@ namespace ExcelProcessor
         {
             ApplicationState.State = State.ValidatingWorkbook;
 
-            LogInfo("Workook is being validated...");
+            LogInfo("Workbook is being validated...");
 
             try
             {
