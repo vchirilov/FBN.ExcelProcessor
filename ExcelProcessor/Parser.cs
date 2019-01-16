@@ -138,7 +138,15 @@ namespace ExcelProcessor
                         columnName = columnName.TrimEnd("(%)".ToArray());
                     }
 
-                    string modelProperty = AttributeHelper.GetPropertyByKey(type,col).Name;
+                    string modelProperty = string.Empty;
+
+                    try
+                    {
+                        modelProperty = AttributeHelper.GetPropertyByKey(type, col).Name;
+                    }
+                    catch {
+                        continue;
+                    }
 
                     if (!string.Equals(columnName.ReplaceSpace(), modelProperty, StringComparison.OrdinalIgnoreCase))
                         throw ApplicationError.Create($"Column {modelProperty} is expected but {columnName} found in sheet {sheet}.");
