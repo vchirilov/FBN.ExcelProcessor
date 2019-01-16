@@ -104,11 +104,11 @@ namespace ExcelProcessor
             ExecuteNonQuery($"UPDATE `{table}` SET {column} = NULL WHERE {column} = '{value}';");
         }
 
-        public static void LogRecord(string stage, string status, string message)
+        public static void LogRecord(string stage, string status, string message, string stackTrace = "")
         {
             DbFacade db = new DbFacade();
             message = MySqlHelper.EscapeString(message);            
-            db.ExecuteNonQuery($"INSERT INTO fbn_logs.logs (`UserId`,`FileName`,`Stage`,`Status`,`Message`) VALUES ('{ApplicationState.ImportDetails?.User}','{ApplicationState.File?.Name}','{stage}','{status}','{message}');");
+            db.ExecuteNonQuery($"INSERT INTO fbn_logs.logs (`UserId`,`FileName`,`Stage`,`Status`,`Message`,`StackTrace`) VALUES ('{ApplicationState.ImportDetails?.User}','{ApplicationState.File?.Name}','{stage}','{status}','{message}','{stackTrace}');");
         }
 
         public void LoadFromStagingToCore(bool includeRequired, bool includeMonthlyPlan, bool includeTracking)

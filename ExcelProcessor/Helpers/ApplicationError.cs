@@ -30,7 +30,12 @@ namespace ExcelProcessor.Helpers
 
         public override string ToString()
         {
-            return $"Class:{CallerClass}, Method:{CallerMethod}, Text:{Text}, StackTrace:{StackTrace}".Truncate(250);            
+            return $"{Text}".Truncate(250);            
+        }
+
+        public string GetStackTrace()
+        {
+            return $"Class:{CallerClass}, Method:{CallerMethod}, StackTrace:{StackTrace}".Truncate(250);
         }
     }
 }

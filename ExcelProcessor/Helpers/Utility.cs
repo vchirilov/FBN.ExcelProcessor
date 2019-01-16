@@ -71,7 +71,7 @@ namespace ExcelProcessor.Helpers
             Console.ForegroundColor = ConsoleColor.White;
 
             if (save)
-                DbFacade.LogRecord(ApplicationState.State.ToString(), "Error", err.ToString());
+                DbFacade.LogRecord(ApplicationState.State.ToString(), "Error", err.ToString(),err.GetStackTrace());
         }
 
         public static void LogError(string txt, bool save = true)
