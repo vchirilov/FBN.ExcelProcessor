@@ -527,7 +527,7 @@ namespace ExcelProcessor
                     throw ApplicationError.Create($"Formula [CPG.PromoPrice = Retailer. COGSPromo] between pages {nameof(CPGPLResults)} & {nameof(RetailerPLResults)} is not satisfied");
 
                 if (!queryResult.All(x => x.NetNetPrice.IsApproximate(x.COGSNonPromo, margin)))
-                    throw ApplicationError.Create($"Formula [CPG.PromoPrice = Retailer. COGSPromo] between pages {nameof(CPGPLResults)} & {nameof(RetailerPLResults)} is not satisfied");
+                    throw ApplicationError.Create($"Formula [CPG.NetNetPrice = Retailer.COGSNonPromo] between pages {nameof(CPGPLResults)} & {nameof(RetailerPLResults)} is not satisfied");
             }
         }
     }
