@@ -143,7 +143,7 @@ namespace ExcelProcessor
 
                     ValidateEANs(dsRetailerProductHierarchy, dsCpgpl, dsCPGReferenceMonthlyPlan, dbFacade);
 
-                    ValidateSanityCheck(dsRetailerPL, dsCPGPLResults, dsRetailerPLResults);
+                    ValidateSanityCheck(dsCpgpl, dsRetailerPL, dsCPGPLResults, dsRetailerPLResults);
 
                     if (dsProductAttributes != null)
                         dbFacade.Insert(dsProductAttributes);
@@ -432,7 +432,7 @@ namespace ExcelProcessor
                 //dsRetailerPLResults = dsRetailerPLResults.Where(x => x.Year == ApplicationState.ImportDetails.Year && x.Month == ApplicationState.ImportDetails.Month).ToList();
             }
         }
-        private static void ValidateSanityCheck(List<RetailerPL> dsRetailerPL, List<CPGPLResults> dsCPGPLResults, List<RetailerPLResults> dsRetailerPLResults)
+        private static void ValidateSanityCheck(List<Cpgpl> dsCpgpl, List<RetailerPL> dsRetailerPL, List<CPGPLResults> dsCPGPLResults, List<RetailerPLResults> dsRetailerPLResults)
         {
             var margin = AppSettings.GetInstance().Margin;
 
@@ -442,8 +442,76 @@ namespace ExcelProcessor
 
             if (ApplicationState.ImportType.IsBase)
             {
+                if (!dsCpgpl.All(x => x.SellInVolumeTotal.IsApproximate(x.SellInVolumePromo + x.SellInVolumeNonPromo, margin)))
+                    throw ApplicationError.Create($"Formula [SellInVolumeTotal = SellInVolumePromo + SellInVolumeNonPromo] in page {nameof(Cpgpl)} is not satisfied");
+
+                if (!dsCpgpl.All(x => x.TTSTotal.IsApproximate(x.ListPricePerUnit - x.NetNetPrice, margin)))
+                    throw ApplicationError.Create($"Formula [TTSTotal = ListPricePerUnit – NetNetPrice] in page {nameof(Cpgpl)} is not satisfied");
+
+                if (!dsCpgpl.All(x => x.ThreeNetPrice.IsApproximate((x.SellInVolumePromo * x.PromoPrice + x.SellInVolumeNonPromo * x.NetNetPrice) / x.SellInVolumeTotal, margin)))
+                    throw ApplicationError.Create($"Formula [3NetPrice = (SellInVolumePromo*PromoPrice + SellInVolumeNonPromo*NetNetPrice) / SellInVolumeTotal] in page {nameof(Cpgpl)} is not satisfied");
+
+                if (!dsCpgpl.All(x => x.CPPTotal.IsApproximate(x.NetNetPrice - x.ThreeNetPrice, margin)))
+                    throw ApplicationError.Create($"Formula [CPPTotal = NetNetPrice-3NetPrice] in page {nameof(Cpgpl)} is not satisfied");
+
+                if (!dsCpgpl.All(x => x.CPGProfitL1Total.IsApproximate(x.ThreeNetPrice - x.COGSTotal, margin)))
+                    throw ApplicationError.Create($"Formula [CPGProfitL1total = 3NetPrice-COGSTotal] in page {nameof(Cpgpl)} is not satisfied");
+
+                if (!dsCpgpl.All(x => x.CPGProfitL1NonPromo.IsApproximate(x.NetNetPrice - x.COGSTotal, margin)))
+                    throw ApplicationError.Create($"Formula [CPGProfitL1NonPromo = NetNetPrice - COGSTotal] in page {nameof(Cpgpl)} is not satisfied");
+
+                if (!dsCpgpl.All(x => x.CPGProfitL1Promo.IsApproximate(x.PromoPrice - x.COGSTotal, margin)))
+                    throw ApplicationError.Create($"Formula [CPGProfitL1Promo = PromoPrice-COGSTotal] in page {nameof(Cpgpl)} is not satisfied");
+
+                if (!dsCpgpl.All(x => x.CPGProfitL2Total.IsApproximate(x.CPGProfitL1Total - x.CPGCODBTotal, margin)))
+                    throw ApplicationError.Create($"Formula [CPGProfitL2Total = CPGProfitL1Total-CODBTotal] in page {nameof(Cpgpl)} is not satisfied");
+
+                if (!dsCpgpl.All(x => x.CPGProfitL3Total.IsApproximate(x.CPGProfitL2Total - x.CPGOverheadTotal, margin)))
+                    throw ApplicationError.Create($"Formula [CPGProfitL3Total = CPGProfitL2Total-CPGOverheadTotal] in page {nameof(Cpgpl)} is not satisfied");
+
+                if (!dsCpgpl.All(x => x.TTSOnTotal.IsApproximate(x.TTSOnConditional + x.TTSOnUnConditional, margin)))
+                    throw ApplicationError.Create($"Formula [TTSOnTotal = TTSOnConditional + TTSOnUnConditional] in page {nameof(Cpgpl)} is not satisfied");
+
+                if (!dsCpgpl.All(x => x.TTSOffTotal.IsApproximate(x.TTSOffConditional + x.TTSOffUnConditional, margin)))
+                    throw ApplicationError.Create($"Formula [TTSOffTotal = TTSOffConditional + TTSOffUnConditional] in page {nameof(Cpgpl)} is not satisfied");
+
+                if (!dsCpgpl.All(x => x.TTSOffTotal.IsApproximate(x.TTSOffConditional + x.TTSOffUnConditional, margin)))
+                    throw ApplicationError.Create($"Formula [TTSOffTotal = TTSOffConditional + TTSOffUnConditional] in page {nameof(Cpgpl)} is not satisfied");
+
+                if (!dsCpgpl.All(x => x.TTSTotal.IsApproximate(x.TTSOnTotal + x.TTSOffTotal, margin)))
+                    throw ApplicationError.Create($"Formula [TTSTotal = TTSOnTotal + TTSOffTotal] in page {nameof(Cpgpl)} is not satisfied");
+
+                if (!dsCpgpl.All(x => x.CPPTotal.IsApproximate(x.CPPOn + x.CPPOff, margin)))
+                    throw ApplicationError.Create($"Formula [CPPTotal = CPPOn + CPPOff] in page {nameof(Cpgpl)} is not satisfied");
+
+
+
+                if (!dsRetailerPL.All(x => x.SellOutPriceAverage.IsApproximate((x.SellOutVolumePromo * x.SellOutPricePromo + x.SellOutVolumeNonPromo * x.SellOutPriceNonPromo) / x.SellOutVolumeTotal, margin)))
+                    throw ApplicationError.Create($"Formula [SellOutPriceAverage = (SellOutVolumePromo*SellOutPricePromo + SellOutVolumeNonPromo * SellOutPriceNonPromo) / SellOutVolumeTotal] in page {nameof(RetailerPL)} is not satisfied");
+
+                if (!dsRetailerPL.All(x => x.RetailerProfitL1Total.IsApproximate(x.SellOutPriceAverage - x.COGSTotal, margin)))
+                    throw ApplicationError.Create($"Formula [RetailerProfitL1Total = SellOutPriceAverrage – COGSTotal] in page {nameof(RetailerPL)} is not satisfied");
+
+                if (!dsRetailerPL.All(x => x.RetailerProfitL1Promo.IsApproximate(x.SellOutPricePromo - x.COGSPromo, margin)))
+                    throw ApplicationError.Create($"Formula [RetailerProfitL1Promo = SellOutPricePromo – COGSPromo] in page {nameof(RetailerPL)} is not satisfied");
+
+                if (!dsRetailerPL.All(x => x.RetailerProfitL1NonPromo.IsApproximate(x.SellOutPriceNonPromo - x.COGSNonPromo, margin)))
+                    throw ApplicationError.Create($"Formula [RetailerProfitL1NonPromo = SellOutPriceNonPromo – COGSNonPRomo] in page {nameof(RetailerPL)} is not satisfied");
+
+                if (!dsRetailerPL.All(x => x.RetailerProfitL2Total.IsApproximate(x.RetailerProfitL1Total - x.RetailerCODBTotal, margin)))
+                    throw ApplicationError.Create($"Formula [RetailerProfitL2Total = RetailerProfitL1Total - RetailerCODBTotal] in page {nameof(RetailerPL)} is not satisfied");
+
+                if (!dsRetailerPL.All(x => x.RetailerProfitL3Total.IsApproximate(x.RetailerProfitL2Total - x.RetailerOverheadTotal, margin)))
+                    throw ApplicationError.Create($"Formula [RetailerProfitL3Total = RetailerProfitL2Total - RetailerOverheadTotal] in page {nameof(RetailerPL)} is not satisfied");
+
+                if (!dsRetailerPL.All(x => x.SellOutVolumeTotal.IsApproximate(x.SellOutVolumePromo + x.SellOutVolumeNonPromo, margin)))
+                    throw ApplicationError.Create($"Formula [SellOutVolumeTotal = SellOutVolumePromo + SellOutVolumeNonPromo] in page {nameof(RetailerPL)} is not satisfied");
+
+                //BAIBI001-872
                 if (!dsRetailerPL.All(x => x.BuyingForwardVolume <= x.SellOutVolumePromo))
                     throw ApplicationError.Create($"Formula [BuyingForwardVolume <= SellOutVolumePromo] in page {nameof(RetailerPL)} is not satisfied");
+
+                RunPLCrossSheetValidation();
             }
 
             if (ApplicationState.ImportType.IsTracking)
@@ -489,6 +557,7 @@ namespace ExcelProcessor
 
                 if (!dsCPGPLResults.All(x => x.CPPTotal.IsApproximate(x.CPPOn + x.CPPOff, margin)))
                     throw ApplicationError.Create($"Formula [CPPTotal = CPPOn + CPPOff] in page {nameof(CPGPLResults)} is not satisfied");
+
                 
 
                 if (!dsRetailerPLResults.All(x => x.SellOutPriceAverage.IsApproximate((x.SellOutVolumePromo*x.SellOutPricePromo + x.SellOutVolumeNonPromo*x.SellOutPriceNonPromo)/x.SellOutVolumeTotal, margin)))
@@ -512,11 +581,31 @@ namespace ExcelProcessor
                 if (!dsRetailerPLResults.All(x => x.SellOutVolumeTotal.IsApproximate(x.SellOutVolumePromo + x.SellOutVolumeNonPromo, margin)))
                     throw ApplicationError.Create($"Formula [SellOutVolumeTotal = SellOutVolumePromo + SellOutVolumeNonPromo] in page {nameof(RetailerPLResults)} is not satisfied");
 
-                RunCrossSheetValidation();
+                RunTrackingCrossSheetValidation();
+            }
+
+            void RunPLCrossSheetValidation()
+            {
+                var query =
+                    from x in dsCpgpl
+                    join y in dsRetailerPL on x.Year equals y.Year
+                    where x.EAN.ToLower() == y.EAN.ToLower()
+                    select new { x.ThreeNetPrice, x.PromoPrice, x.NetNetPrice, y.COGSTotal, y.COGSPromo, y.COGSNonPromo };
+
+                var queryResult = query.ToList();
+
+                if (!queryResult.All(x => x.ThreeNetPrice.IsApproximate(x.COGSTotal, margin)))
+                    throw ApplicationError.Create($"Formula [CPG.ThreeNetPrice =  Retailer.COGSTotal] between pages {nameof(Cpgpl)} & {nameof(RetailerPL)} is not satisfied");
+
+                if (!queryResult.All(x => x.PromoPrice.IsApproximate(x.COGSPromo, margin)))
+                    throw ApplicationError.Create($"Formula [CPG.PromoPrice = Retailer. COGSPromo] between pages {nameof(Cpgpl)} & {nameof(RetailerPL)} is not satisfied");
+
+                if (!queryResult.All(x => x.NetNetPrice.IsApproximate(x.COGSNonPromo, margin)))
+                    throw ApplicationError.Create($"Formula [CPG.NetNetPrice = Retailer.COGSNonPromo] between pages {nameof(Cpgpl)} & {nameof(RetailerPL)} is not satisfied");
             }
 
 
-            void RunCrossSheetValidation()
+            void RunTrackingCrossSheetValidation()
             {
                 var query =
                     from x in dsCPGPLResults
@@ -535,6 +624,8 @@ namespace ExcelProcessor
                 if (!queryResult.All(x => x.NetNetPrice.IsApproximate(x.COGSNonPromo, margin)))
                     throw ApplicationError.Create($"Formula [CPG.NetNetPrice = Retailer.COGSNonPromo] between pages {nameof(CPGPLResults)} & {nameof(RetailerPLResults)} is not satisfied");
             }
+
+
         }
     }
 }

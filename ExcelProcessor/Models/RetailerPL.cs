@@ -27,7 +27,7 @@ namespace ExcelProcessor.Models
         [Order(17)] public decimal COGSNonPromo { get; set; }
         [Order(18)] public decimal RetailerProfitL1Total { get; set; }
         [Order(19)] public decimal RetailerProfitL1Promo { get; set; }
-        [Order(29)] public decimal RetailerProfitL1NonPromo { get; set; }
+        [Order(20)] public decimal RetailerProfitL1NonPromo { get; set; }
         [Order(21)] public decimal RetailerCODBTotal { get; set; }
         [Order(22)] public decimal RetailerProfitL2Total { get; set; }
         [Order(23)] public decimal RetailerOverheadTotal { get; set; }
