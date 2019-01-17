@@ -143,7 +143,7 @@ namespace ExcelProcessor
 
                     ValidateEANs(dsRetailerProductHierarchy, dsCpgpl, dsCPGReferenceMonthlyPlan, dbFacade);
 
-                    ValidateSanityCheck(dsCPGPLResults, dsRetailerPLResults);
+                    ValidateSanityCheck(dsRetailerPL, dsCPGPLResults, dsRetailerPLResults);
 
                     if (dsProductAttributes != null)
                         dbFacade.Insert(dsProductAttributes);
@@ -432,13 +432,19 @@ namespace ExcelProcessor
                 //dsRetailerPLResults = dsRetailerPLResults.Where(x => x.Year == ApplicationState.ImportDetails.Year && x.Month == ApplicationState.ImportDetails.Month).ToList();
             }
         }
-        private static void ValidateSanityCheck(List<CPGPLResults> dsCPGPLResults, List<RetailerPLResults> dsRetailerPLResults)
+        private static void ValidateSanityCheck(List<RetailerPL> dsRetailerPL, List<CPGPLResults> dsCPGPLResults, List<RetailerPLResults> dsRetailerPLResults)
         {
             var margin = AppSettings.GetInstance().Margin;
 
             ApplicationState.State = State.SanityCheck;
 
             LogInfo($"Validate sanity check with margin = {margin}");
+
+            if (ApplicationState.ImportType.IsBase)
+            {
+                if (!dsRetailerPL.All(x => x.BuyingForwardVolume <= x.SellOutVolumePromo))
+                    throw ApplicationError.Create($"Formula [BuyingForwardVolume <= SellOutVolumePromo] in page {nameof(RetailerPL)} is not satisfied");
+            }
 
             if (ApplicationState.ImportType.IsTracking)
             {

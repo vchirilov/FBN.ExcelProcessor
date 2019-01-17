@@ -98,7 +98,7 @@ namespace ExcelProcessor.Helpers
         public static void AddHeader()
         {
             Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("Service(version: 2019.01.16.03) has started...");
+            Console.WriteLine("Service(version: 2019.01.17.01) has started...");
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine("WARNING: Press any key to close the service.");
             Console.ForegroundColor = ConsoleColor.White;

@@ -128,6 +128,7 @@ namespace ExcelProcessor
                 for (int col = 1; col <= colCount; col++)
                 {
                     object cellValue = worksheet.Cells[1, col].Value;
+
                     if (cellValue == null)
                         continue;
 

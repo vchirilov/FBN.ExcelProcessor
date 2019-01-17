@@ -18,19 +18,20 @@ namespace ExcelProcessor.Models
         [Order(8)] public decimal SellOutVolumeTotal { get; set; }
         [Order(9)] public decimal SellOutVolumePromo { get; set; }
         [Order(10)] public decimal SellOutVolumeNonPromo { get; set; }
-        [Order(11)] public decimal SellOutPriceAverage { get; set; }
-        [Order(12)] public decimal SellOutPricePromo { get; set; }
-        [Order(13)] public decimal SellOutPriceNonPromo { get; set; }
-        [Order(14)] public decimal COGSTotal { get; set; }
-        [Order(15)] public decimal COGSPromo { get; set; }
-        [Order(16)] public decimal COGSNonPromo { get; set; }
-        [Order(17)] public decimal RetailerProfitL1Total { get; set; }
-        [Order(18)] public decimal RetailerProfitL1Promo { get; set; }
-        [Order(19)] public decimal RetailerProfitL1NonPromo { get; set; }
-        [Order(20)] public decimal RetailerCODBTotal { get; set; }
-        [Order(21)] public decimal RetailerProfitL2Total { get; set; }
-        [Order(22)] public decimal RetailerOverheadTotal { get; set; }
-        [Order(23)] public decimal RetailerProfitL3Total { get; set; }
+        [Order(11)] public decimal BuyingForwardVolume { get; set; }
+        [Order(12)] public decimal SellOutPriceAverage { get; set; }
+        [Order(13)] public decimal SellOutPricePromo { get; set; }
+        [Order(14)] public decimal SellOutPriceNonPromo { get; set; }
+        [Order(15)] public decimal COGSTotal { get; set; }
+        [Order(16)] public decimal COGSPromo { get; set; }
+        [Order(17)] public decimal COGSNonPromo { get; set; }
+        [Order(18)] public decimal RetailerProfitL1Total { get; set; }
+        [Order(19)] public decimal RetailerProfitL1Promo { get; set; }
+        [Order(29)] public decimal RetailerProfitL1NonPromo { get; set; }
+        [Order(21)] public decimal RetailerCODBTotal { get; set; }
+        [Order(22)] public decimal RetailerProfitL2Total { get; set; }
+        [Order(23)] public decimal RetailerOverheadTotal { get; set; }
+        [Order(24)] public decimal RetailerProfitL3Total { get; set; }
 
         public bool IsEmpty()
         {
@@ -44,6 +45,7 @@ namespace ExcelProcessor.Models
                 SellOutVolumeTotal == 0m &&
                 SellOutVolumePromo == 0m &&
                 SellOutVolumeNonPromo == 0m &&
+                BuyingForwardVolume == 0m &&
                 SellOutPriceAverage == 0m &&
                 SellOutPricePromo == 0m &&
                 SellOutPriceNonPromo == 0m &&
