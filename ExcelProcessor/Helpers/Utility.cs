@@ -94,15 +94,19 @@ namespace ExcelProcessor.Helpers
                 DbFacade.LogRecord(ApplicationState.State.ToString(), "Warning", txt);
         }
 
-
-        public static void AddHeader()
+        public static void AddHeader1()
         {
             Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("Service(version: 2019.01.17.02) has started...");
+            Console.WriteLine($"Service(version: 2019.01.18.01) has started at {DateTime.Now}...");
+            Console.ForegroundColor = ConsoleColor.White;            
+        }
+
+        public static void AddHeader2()
+        {            
             Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine("WARNING: Press any key to close the service.");
+            Console.WriteLine($"WARNING: Press [q+Enter] to close the service. Execution time: {DateTime.Now}");
             Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine("*********************************************");
+            Console.WriteLine("************************************************************************************");
         }
 
         public static void ClearScreen()

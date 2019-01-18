@@ -7,18 +7,21 @@ namespace ExcelProcessor
     {
         static void Main(string[] args)
         {
-            AddHeader();
-
             try
             {
+                AddHeader1();
                 Watcher.WatchFile();
             }
             catch (Exception exc)
             {
                 LogError($"Program exception: {exc.Message}", false);
             }
-            
-            Console.ReadKey();
+
+            while (true)
+            {
+                if (Console.ReadLine() == "q")
+                    break;
+            }
         }
 
     }

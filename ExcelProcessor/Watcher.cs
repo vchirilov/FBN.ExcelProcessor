@@ -25,26 +25,33 @@ namespace ExcelProcessor
 
         public static void WatchFile()
         {
-            FileSystemWatcher watcher = new FileSystemWatcher();     
-            watcher.Path = FileManager.GetContainerFolder().Name;
-            watcher.Filter = "*.xlsx";
-            watcher.IncludeSubdirectories = false;
-            watcher.EnableRaisingEvents = true;
+            try
+            {
+                FileSystemWatcher watcher = new FileSystemWatcher();
+                watcher.Path = FileManager.GetContainerFolder().Name;
+                watcher.Filter = "*.xlsx";
+                watcher.IncludeSubdirectories = false;
+                watcher.EnableRaisingEvents = true;
 
-            watcher.Created += OnCreated;
-            //watcher.Created += (sender, e) => Console.WriteLine("File created");
+                watcher.Created += OnCreated;
+                //watcher.Created += (sender, e) => Console.WriteLine("File created");
 
-            watcher.Deleted += OnDeleted;
-            //watcher.Deleted += (sender, e) => Console.WriteLine("File deleted");
+                watcher.Deleted += OnDeleted;
+                //watcher.Deleted += (sender, e) => Console.WriteLine("File deleted");
+            }
+            catch (Exception exc)
+            {
+                LogError($"Global exception: {exc.Message}", false);
+            }            
         }
 
         private static void OnCreated(object sender, FileSystemEventArgs e)
         {
             try
             {
-                ClearScreen();
-                AddHeader();                
-                WaitForFile(e);                
+                //ClearScreen();
+                AddHeader2();                
+                WaitForFile(e);
                 Run();               
             }
             catch(MySqlException exc)
@@ -442,6 +449,7 @@ namespace ExcelProcessor
 
             if (ApplicationState.ImportType.IsBase)
             {
+                //Sanity check for sheet Cpgpl
                 if (!dsCpgpl.All(x => x.SellInVolumeTotal.IsApproximate(x.SellInVolumePromo + x.SellInVolumeNonPromo, margin)))
                     throw ApplicationError.Create($"Formula [SellInVolumeTotal = SellInVolumePromo + SellInVolumeNonPromo] in page {nameof(Cpgpl)} is not satisfied");
 
@@ -485,7 +493,7 @@ namespace ExcelProcessor
                     throw ApplicationError.Create($"Formula [CPPTotal = CPPOn + CPPOff] in page {nameof(Cpgpl)} is not satisfied");
 
 
-
+                //Sanity check for sheet RetailerPL
                 if (!dsRetailerPL.All(x => x.SellOutPriceAverage.IsApproximate((x.SellOutVolumePromo * x.SellOutPricePromo + x.SellOutVolumeNonPromo * x.SellOutPriceNonPromo) / x.SellOutVolumeTotal, margin)))
                     throw ApplicationError.Create($"Formula [SellOutPriceAverage = (SellOutVolumePromo*SellOutPricePromo + SellOutVolumeNonPromo * SellOutPriceNonPromo) / SellOutVolumeTotal] in page {nameof(RetailerPL)} is not satisfied");
 
@@ -506,16 +514,17 @@ namespace ExcelProcessor
 
                 if (!dsRetailerPL.All(x => x.SellOutVolumeTotal.IsApproximate(x.SellOutVolumePromo + x.SellOutVolumeNonPromo, margin)))
                     throw ApplicationError.Create($"Formula [SellOutVolumeTotal = SellOutVolumePromo + SellOutVolumeNonPromo] in page {nameof(RetailerPL)} is not satisfied");
-
-                //BAIBI001-872
-                if (!dsRetailerPL.All(x => x.BuyingForwardVolume <= x.SellOutVolumePromo))
+                                
+                if (!dsRetailerPL.All(x => x.BuyingForwardVolume <= x.SellOutVolumePromo)) //BAIBI001-872
                     throw ApplicationError.Create($"Formula [BuyingForwardVolume <= SellOutVolumePromo] in page {nameof(RetailerPL)} is not satisfied");
 
+                //Cross sanity check for sheets Gpgpl & RetailerPL
                 RunPLCrossSheetValidation();
             }
 
             if (ApplicationState.ImportType.IsTracking)
             {
+                //Sanity check for sheet CPGPLResults
                 if (!dsCPGPLResults.All(x => x.SellInVolumeTotal.IsApproximate(x.SellInVolumePromo + x.SellInVolumeNonPromo, margin)))
                     throw ApplicationError.Create($"Formula [SellInVolumeTotal = SellInVolumePromo + SellInVolumeNonPromo] in page {nameof(CPGPLResults)} is not satisfied");
 
@@ -558,8 +567,8 @@ namespace ExcelProcessor
                 if (!dsCPGPLResults.All(x => x.CPPTotal.IsApproximate(x.CPPOn + x.CPPOff, margin)))
                     throw ApplicationError.Create($"Formula [CPPTotal = CPPOn + CPPOff] in page {nameof(CPGPLResults)} is not satisfied");
 
-                
 
+                //Sanity check for sheet RetailerPLResults
                 if (!dsRetailerPLResults.All(x => x.SellOutPriceAverage.IsApproximate((x.SellOutVolumePromo*x.SellOutPricePromo + x.SellOutVolumeNonPromo*x.SellOutPriceNonPromo)/x.SellOutVolumeTotal, margin)))
                     throw ApplicationError.Create($"Formula [SellOutPriceAverage = (SellOutVolumePromo*SellOutPricePromo + SellOutVolumeNonPromo * SellOutPriceNonPromo) / SellOutVolumeTotal] in page {nameof(RetailerPLResults)} is not satisfied");
 
@@ -580,7 +589,11 @@ namespace ExcelProcessor
 
                 if (!dsRetailerPLResults.All(x => x.SellOutVolumeTotal.IsApproximate(x.SellOutVolumePromo + x.SellOutVolumeNonPromo, margin)))
                     throw ApplicationError.Create($"Formula [SellOutVolumeTotal = SellOutVolumePromo + SellOutVolumeNonPromo] in page {nameof(RetailerPLResults)} is not satisfied");
+                                
+                if (!dsRetailerPLResults.All(x => x.BuyingForwardVolume <= x.SellOutVolumePromo)) //BAIBI001-872
+                    throw ApplicationError.Create($"Formula [BuyingForwardVolume <= SellOutVolumePromo] in page {nameof(RetailerPLResults)} is not satisfied");
 
+                //Cross sanity check for sheets CPGPLResults & RetailerPLResults
                 RunTrackingCrossSheetValidation();
             }
 
