@@ -107,7 +107,8 @@ namespace ExcelProcessor
         public static void LogRecord(string stage, string status, string message, string stackTrace = "")
         {
             DbFacade db = new DbFacade();
-            message = MySqlHelper.EscapeString(message);            
+            message = MySqlHelper.EscapeString(message);
+            stackTrace = MySqlHelper.EscapeString(stackTrace);
             db.ExecuteNonQuery($"INSERT INTO fbn_logs.logs (`UserId`,`FileName`,`Stage`,`Status`,`Message`,`StackTrace`) VALUES ('{ApplicationState.ImportDetails?.User}','{ApplicationState.File?.Name}','{stage}','{status}','{message}','{stackTrace}');");
         }
 

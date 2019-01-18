@@ -87,7 +87,7 @@ namespace ExcelProcessor.Helpers
         public static void LogWarning(string txt, bool save = true)
         {
             Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine($"Warning: {txt}");
+            Console.WriteLine($"WARNING: {txt}");
             Console.ForegroundColor = ConsoleColor.White;
 
             if (save)
