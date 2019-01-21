@@ -34,10 +34,11 @@ namespace ExcelProcessor
                 watcher.EnableRaisingEvents = true;
 
                 watcher.Created += OnCreated;
-                //watcher.Created += (sender, e) => Console.WriteLine("File created");
-
+                watcher.Changed += OnChanged;
                 watcher.Deleted += OnDeleted;
-                //watcher.Deleted += (sender, e) => Console.WriteLine("File deleted");
+                watcher.Error += OnError;
+
+                GC.KeepAlive(watcher);
             }
             catch (Exception exc)
             {
@@ -74,6 +75,16 @@ namespace ExcelProcessor
                 ApplicationState.Reset();
                 FileManager.DeleteFile();
             }            
+        }
+
+        private static void OnChanged(object sender, FileSystemEventArgs e)
+        {
+            LogWarning($"Watcher.OnChanged() event has occured", false);
+        }
+
+        private static void OnError(object sender, ErrorEventArgs e)
+        {
+            LogError($"Watcher.OnError() exception: {e.GetException().Message}", false);
         }
 
         private static void OnDeleted(object sender, FileSystemEventArgs e)
