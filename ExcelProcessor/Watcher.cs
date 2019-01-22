@@ -426,11 +426,16 @@ namespace ExcelProcessor
         {
             if (ApplicationState.ImportType.IsMonthly)
             {
+                var margin = AppSettings.GetInstance().Margin;
+
                 if (!dsCPGReferenceMonthlyPlan.Exists(x => x.Year == ApplicationState.ImportDetails.Year))
                     throw ApplicationError.Create($"Selected year {ApplicationState.ImportDetails.Year} doesn't exist in input file.");
 
                 if (dsCPGReferenceMonthlyPlan.Select(x => x.Year).Distinct().Count() > 1)
                     throw ApplicationError.Create($"There are too many years defined in the file.");
+                
+                if (!dsCPGReferenceMonthlyPlan.All(x => 1m.IsApproximate(x.Jan + x.Feb + x.Mar + x.Apr + x.May + x.Jun + x.Jul + x.Aug + x.Sep + x.Oct + x.Nov + x.Dec, margin)))
+                    throw ApplicationError.Create($"SUM of monthly breakdown for one EAN must be 100%");
             }
         }
         private static void ValidateTrackingResults(List<CPGPLResults> dsCPGPLResults, List<RetailerPLResults> dsRetailerPLResults)

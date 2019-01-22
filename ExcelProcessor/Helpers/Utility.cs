@@ -97,7 +97,7 @@ namespace ExcelProcessor.Helpers
         public static void AddHeader1()
         {
             Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine($"Service(version: 2019.01.21.01) has started at {DateTime.Now}...");
+            Console.WriteLine($"Service(version: 2019.01.22.01) has started at {DateTime.Now}...");
             Console.ForegroundColor = ConsoleColor.White;            
         }
 
