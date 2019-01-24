@@ -351,10 +351,10 @@ namespace ExcelProcessor
                 int minYear1 = dsCpgpl.Select(x => x.Year).Min();
                 int minYear2 = dsRetailerPL.Select(x => x.Year).Min();
 
-                if (currYear >= minYear1)
+                if (currYear <= minYear1)
                     throw ApplicationError.Create($"{nameof(Cpgpl)} has no historical data");
                 
-                if (currYear >= minYear2)
+                if (currYear <= minYear2)
                     throw ApplicationError.Create($"{nameof(RetailerPL)} has no historical data");
             }
         }
