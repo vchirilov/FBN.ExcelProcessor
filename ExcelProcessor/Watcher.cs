@@ -17,17 +17,19 @@ namespace ExcelProcessor
     public static class Watcher
     {
         private static readonly DbFacade dbFacade;
+        private static readonly FileSystemWatcher watcher;
 
         static Watcher()
         {
             dbFacade = new DbFacade();
+            watcher = new FileSystemWatcher();
+            GC.KeepAlive(watcher);
         }
 
         public static void WatchFile()
         {
             try
-            {
-                FileSystemWatcher watcher = new FileSystemWatcher();
+            {                
                 watcher.Path = FileManager.GetContainerFolder().Name;
                 watcher.Filter = "*.xlsx";
                 watcher.IncludeSubdirectories = false;
@@ -36,9 +38,7 @@ namespace ExcelProcessor
                 watcher.Created += OnCreated;
                 watcher.Changed += OnChanged;
                 watcher.Deleted += OnDeleted;
-                watcher.Error += OnError;
-
-                GC.KeepAlive(watcher);
+                watcher.Error += OnError;                
             }
             catch (Exception exc)
             {
@@ -53,7 +53,7 @@ namespace ExcelProcessor
                 //ClearScreen();
                 AddHeader2();                
                 WaitForFile(e);
-                Run();               
+                Run();                
             }
             catch(MySqlException exc)
             {
@@ -633,7 +633,6 @@ namespace ExcelProcessor
                     throw ApplicationError.Create($"Formula [CPG.NetNetPrice = Retailer.COGSNonPromo] between pages {nameof(Cpgpl)} & {nameof(RetailerPL)} is not satisfied");
             }
 
-
             void RunTrackingCrossSheetValidation()
             {
                 var query =
@@ -653,8 +652,6 @@ namespace ExcelProcessor
                 if (!queryResult.All(x => x.NetNetPrice.IsApproximate(x.COGSNonPromo, margin)))
                     throw ApplicationError.Create($"Formula [CPG.NetNetPrice = Retailer.COGSNonPromo] between pages {nameof(CPGPLResults)} & {nameof(RetailerPLResults)} is not satisfied");
             }
-
-
         }
     }
 }
