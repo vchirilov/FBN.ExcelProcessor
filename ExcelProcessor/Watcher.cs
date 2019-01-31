@@ -364,15 +364,19 @@ namespace ExcelProcessor
             {
                 var fileWithoutExtension = ApplicationState.File.Name.GetFileNameWithoutExtension();
 
-                var value = dbFacade.GetAll<ImportDetails>().FirstOrDefault(x => x.Uuid.ToString().Equals(fileWithoutExtension, StringComparison.OrdinalIgnoreCase));
+                var importDetails = dbFacade.GetAll<ImportDetails>().FirstOrDefault(x => x.Uuid.ToString().Equals(fileWithoutExtension, StringComparison.OrdinalIgnoreCase));
+                var marginFromDb = dbFacade.GetAll<Configuration>().Where(x => x.ParameterName.ToLower() == "margin").Select(x => x.ParameterValue).FirstOrDefault();
+                
+                if (decimal.TryParse(marginFromDb, out decimal margin))
+                    AppSettings.GetInstance().Margin = margin;
 
-                if (value == null)
+                if (importDetails == null)
                     throw ApplicationError.Create("Failed to extract import information from fbn_import database.");
                 else
-                    ApplicationState.ImportDetails = value;
+                    ApplicationState.ImportDetails = importDetails;
 
 
-                switch (value.ImportType)
+                switch (importDetails.ImportType)
                 {
                     case "full-import":
                         ApplicationState.ImportType.IsBase = true;
