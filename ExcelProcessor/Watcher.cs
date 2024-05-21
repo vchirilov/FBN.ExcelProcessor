@@ -535,9 +535,6 @@ namespace ExcelProcessor
                 if (!dsRetailerPL.All(x => x.SellOutVolumeTotal.IsApproximate(x.SellOutVolumePromo + x.SellOutVolumeNonPromo, margin)))
                     throw ApplicationError.Create($"Formula [SellOutVolumeTotal = SellOutVolumePromo + SellOutVolumeNonPromo] in page {nameof(RetailerPL)} is not satisfied");
                                 
-                if (!dsRetailerPL.All(x => x.BuyingForwardVolume <= x.SellOutVolumePromo)) //BAIBI001-872
-                    throw ApplicationError.Create($"Formula [BuyingForwardVolume <= SellOutVolumePromo] in page {nameof(RetailerPL)} is not satisfied");
-
                 //Cross sanity check for sheets Gpgpl & RetailerPL
                 RunPLCrossSheetValidation();
             }
@@ -610,9 +607,6 @@ namespace ExcelProcessor
                 if (!dsRetailerPLResults.All(x => x.SellOutVolumeTotal.IsApproximate(x.SellOutVolumePromo + x.SellOutVolumeNonPromo, margin)))
                     throw ApplicationError.Create($"Formula [SellOutVolumeTotal = SellOutVolumePromo + SellOutVolumeNonPromo] in page {nameof(RetailerPLResults)} is not satisfied");
                                 
-                if (!dsRetailerPLResults.All(x => x.BuyingForwardVolume <= x.SellOutVolumePromo)) //BAIBI001-872
-                    throw ApplicationError.Create($"Formula [BuyingForwardVolume <= SellOutVolumePromo] in page {nameof(RetailerPLResults)} is not satisfied");
-
                 //Cross sanity check for sheets CPGPLResults & RetailerPLResults
                 RunTrackingCrossSheetValidation();
             }
